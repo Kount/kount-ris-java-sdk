@@ -1,4 +1,4 @@
-Kount RIS Java SDK
-==================
+# Kount Java SDK #
 
-Repository for Kount RIS Java SDK source code and wiki.
+Contains the Kount Java SDK, a maven-built project with source files, tests, and documentation
+
