@@ -49,4 +49,25 @@
     </dependencies>
   </dependencyManagement>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>${maven.release.plugin.version}</version>
+        <configuration>
+          <goals>deploy</goals>
+          <tagNameFormat>@{project.version}</tagNameFormat>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <scm>
+    <connection>scm:git:git@github.com:Kount/kount-ris-java-sdk.git</connection>
+    <developerConnection>scm:git:git@github.com:Kount/kount-ris-java-sdk.git</developerConnection>
+    <url>scm:git:git@github.com:Kount/kount-ris-java-sdk.git</url>
+    <tag>HEAD</tag>
+  </scm>
+
 </project>
