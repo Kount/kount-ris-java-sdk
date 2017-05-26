@@ -1,0 +1,109 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.kount</groupId>
+    <artifactId>kount-java-parent</artifactId>
+    <version>6.5.0-SNAPSHOT</version>
+  </parent>
+
+  <groupId>com.kount</groupId>
+  <artifactId>kount-ris-sdk</artifactId>
+  <version>6.5.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <dependencies>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+  <profiles>
+    <profile>
+      <id>doclint-java8-disable</id>
+      <activation>
+        <jdk>[1.8,)</jdk>
+      </activation>
+      <properties>
+        <javadoc.opts>-Xdoclint:none</javadoc.opts>
+      </properties>
+    </profile>
+  </profiles>
+
+  <build>
+    <finalName>${project.artifactId}-${project.version}-${maven.build.timestamp}</finalName>
+    <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.10.4</version>
+        <configuration>
+          <sourcepath>${project.basedir}/src/main</sourcepath>
+          <aggregate>false</aggregate>
+          <additionalparam>${javadoc.opts}</additionalparam>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>javadoc</goal>
+            </goals>
+            <phase>process-resources</phase>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.0.0</version>
+        <configuration>
+          <descriptors>
+            <descriptor>package.xml</descriptor>
+          </descriptors>
+        </configuration>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>${maven.release.plugin.version}</version>
+        <configuration>
+          <goals>deploy</goals>
+          <tagNameFormat>@{project.version}</tagNameFormat>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <scm>
+    <connection>scm:git:git@bitbucket.org:panatonkount/sdkjava.git</connection>
+    <developerConnection>scm:git:git@bitbucket.org:panatonkount/sdkjava.git</developerConnection>
+    <url>scm:git:git@bitbucket.org:panatonkount/sdkjava.git</url>
+    <tag>HEAD</tag>
+  </scm>
+
+</project>
