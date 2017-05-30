@@ -1,5 +1,5 @@
-Kount Java SDK
-==============
+Kount Java SDK Integration Tests
+================================
 
 ### How do I get set up? ###
 
@@ -9,6 +9,7 @@ Kount Java SDK
     * `JDK/JRE 1.7+`
 * How to build the SDK and run integration tests
     * setup maven
+    * obtain your SALT phrase from the Kount team
     * run `mvn clean install -DargLine="-Dkount.ris.salt='...'"` in root directory
 * Setting up IDE projects
     * `eclipse` - run `mvn eclipse:eclipse` and import as existing project

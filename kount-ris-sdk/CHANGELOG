@@ -1,12 +1,16 @@
 Kount RIS Java SDK CHANGELOG
 ============================
 
-Version 6.5.0-SNAPSHOT
+Version 6.5.1-SNAPSHOT
 ======================
-mm/dd/yyyy
+
+1. pom updates
+
+Version 6.5.0 changes
+=====================
+05/29/2017
 
 1. SALT phrase configurable as system variable
-
 
 Version 6.4.2 changes
 =====================
