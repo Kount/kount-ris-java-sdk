@@ -7,6 +7,7 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
@@ -32,6 +33,9 @@ import com.kount.ris.util.RisTransportException;
  */
 public class HttpApiTransport extends Transport {
 
+	public static final String CUSTOM_HEADER_MERCHANT_ID = "X-Kount-Merc-Id";
+	public static final String CUSTOM_HEADER_API_KEY = "X-Kount-Api-Key";
+	
 	/**
 	 * Logger.
 	 */
@@ -88,8 +92,8 @@ public class HttpApiTransport extends Transport {
 	 * @return Reader for character stream returned by RIS
 	 */
 	public Reader send(Map<String, String> params) throws RisTransportException {
-		if (!params.containsKey("PTOK")
-				|| (params.containsKey("PENC") && "KHASH".equals(params.get("PENC")) && null == params.get("PTOK"))) {
+		if (!params.containsKey("PTOK")	|| 
+				("KHASH".equals(params.get("PENC")) && null == params.get("PTOK"))) {
 			params.put("PENC", "");
 		}
 
@@ -105,16 +109,32 @@ public class HttpApiTransport extends Transport {
 			urlConn.setDoOutput(true);
 			urlConn.setUseCaches(false);
 			urlConn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-			urlConn.setRequestProperty("X-Kount-Api-Key", URLEncoder.encode(this.apiKey, "UTF-8"));
+			urlConn.setRequestProperty(CUSTOM_HEADER_API_KEY, 
+					URLEncoder.encode(this.apiKey, StandardCharsets.UTF_8.name()));
+			urlConn.setRequestProperty(CUSTOM_HEADER_MERCHANT_ID, 
+					URLEncoder.encode(params.get("MERC"), StandardCharsets.UTF_8.name()));
+			
 			urlConn.setConnectTimeout(this.connectTimeout);
 			urlConn.setReadTimeout(this.readTimeout);
 
+			long startTime = System.currentTimeMillis();
 			OutputStreamWriter out = new OutputStreamWriter(urlConn.getOutputStream(), "UTF-8");
 			writeParametersToOutput(out, params);
 			out.flush();
 			out.close();
 
 			reader = new BufferedReader(new InputStreamReader(urlConn.getInputStream()));
+			
+			long elapsed = (System.currentTimeMillis() - startTime);
+			
+			if (logger.isDebugEnabled()) {
+				StringBuilder builder = new StringBuilder();
+				builder.append("MERC = ").append(params.get("MERC"));
+				builder.append(" SESS = ").append(params.get("SESS"));
+				builder.append(" elapsed = ").append(elapsed).append(" ms.");
+				
+				logger.debug(builder.toString());
+			}
 		} catch (IOException ioe) {
 			logger.error("Error fetching RIS response", ioe);
 			throw new RisTransportException("An error ocurred while getting the RIS response", ioe);
