@@ -1,4 +1,4 @@
-package com.kount.ris;
+package com.kount.ris.khash;
 
 import static org.junit.Assert.assertEquals;
 

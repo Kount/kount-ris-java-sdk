@@ -1,10 +1,12 @@
-package com.kount.ris;
+package com.kount.ris.khash;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 
 import org.junit.Test;
 
+import com.kount.ris.Inquiry;
+import com.kount.ris.Request;
 import com.kount.ris.util.payment.CardPayment;
 import com.kount.ris.util.payment.CheckPayment;
 
