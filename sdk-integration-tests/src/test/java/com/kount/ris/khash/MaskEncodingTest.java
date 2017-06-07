@@ -1,4 +1,4 @@
-package com.kount.ris;
+package com.kount.ris.khash;
 
 import static org.junit.Assert.*;
 
@@ -10,6 +10,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.kount.ris.Inquiry;
+import com.kount.ris.KountRisClient;
+import com.kount.ris.Response;
+import com.kount.ris.TestConstants;
 import com.kount.ris.util.RisException;
 import com.kount.ris.util.Utilities;
 import com.kount.ris.util.payment.CardPayment;
