@@ -1,8 +1,10 @@
 Version 6.5.1 changes
 ---------------------
-mm/dd/yyyy
+06/23/2017
 
-1. pom facelift
+1. Improved communication logging
+2. Added more information to connection headers
+3. Integrated more payment types, see https://api.test.kount.net/rpc/support/payments.html
 
 Version 6.5.0 changes
 ---------------------
