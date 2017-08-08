@@ -5,12 +5,12 @@
   <parent>
     <groupId>com.kount</groupId>
     <artifactId>kount-java-parent</artifactId>
-    <version>6.5.2</version>
+    <version>6.5.3-SNAPSHOT</version>
   </parent>
 
   <groupId>com.kount</groupId>
   <artifactId>sdk-integration-tests</artifactId>
-  <version>6.5.2</version>
+  <version>6.5.3-SNAPSHOT</version>
   <name>sdk-integration-tests</name>
 
   <properties>
@@ -22,7 +22,7 @@
     <dependency>
       <groupId>com.kount</groupId>
       <artifactId>kount-ris-sdk</artifactId>
-      <version>6.5.2</version>
+      <version>6.5.3-SNAPSHOT</version>
     </dependency>
 
     <dependency>
