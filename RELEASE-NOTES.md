@@ -1,6 +1,6 @@
 Version 6.5.2 changes
 ---------------------
-mm/dd/yyyy
+08/08/2017
 
 1. Removed request parameters CCMM and CCYY
 
