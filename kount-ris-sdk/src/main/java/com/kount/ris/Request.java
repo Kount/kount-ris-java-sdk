@@ -360,21 +360,6 @@ public abstract class Request {
 	}
 
 	/**
-	 * Set Card Expiration Date.
-	 * 
-	 * @param month
-	 *            String Month in two digit format: MM.
-	 * @param year
-	 *            String Year in four digit format: YYYY.
-	 * @return this
-	 */
-	public Request setExpirationDate(String month, String year) {
-		params.put("CCMM", month);
-		params.put("CCYY", year);
-		return this;
-	}
-
-	/**
 	 * Fetch the map of data parameters to send to RIS.
 	 * 
 	 * @return Map of params

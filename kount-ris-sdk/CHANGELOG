@@ -1,8 +1,13 @@
 Kount RIS Java SDK CHANGELOG
 ============================
 
-Version 6.5.1-SNAPSHOT
-======================
+Version 6.5.2
+=============
+
+1. Removed setters for request parameters CCMM and CCYY
+
+Version 6.5.1
+=============
 
 1. pom updates
 
