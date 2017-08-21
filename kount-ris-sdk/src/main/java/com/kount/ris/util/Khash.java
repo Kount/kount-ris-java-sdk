@@ -7,6 +7,7 @@ import java.util.Scanner;
 
 import org.apache.log4j.Logger;
 
+import com.github.fzakaria.ascii85.Ascii85;
 import com.kount.ris.RisConfigurationConstants;
 
 /**
@@ -22,17 +23,17 @@ public final class Khash {
 	
 	private static final String ACCEPTABLE_CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-	private String saltPhrase;
+	private String configurationKey;
 	
 	private static Khash INSTANCE = null;
 	
 	/**
-	 * Method to retrieve the singleton Khash instance. It is required that <code>kount.salt.phrase</code>
+	 * Method to retrieve the singleton Khash instance. It is required that <code>kount.config.key</code>
 	 * system variable must be present in order for the instance to be initialized.
 	 * 
 	 * @return Khash object
 	 * 
-	 * @throws RuntimeException A {@link RuntimeException} is thrown if <code>kount.ris.salt</code>
+	 * @throws RuntimeException A {@link RuntimeException} is thrown if <code>kount.config.key</code>
 	 * 			system variable has not been set.
 	 */
 	public static Khash getInstance() throws RuntimeException {
@@ -45,26 +46,28 @@ public final class Khash {
 	
 	/**
 	 * The Khash class default constructor. Uses <code>System.getProperty</code> to initialize
-	 * the SALT phrase used in hashing operations.
+	 * the configuration key that is used for hashing operations.
 	 */
 	private Khash() throws RuntimeException {
-		saltPhrase = System.getProperty(RisConfigurationConstants.PROPERTY_RIS_SALT_PHRASE, null); 
-		if (saltPhrase == null || saltPhrase.isEmpty()) {
-			logger.error("No SALT phrase configured at 'kount.ris.salt' system variable");
-			throw new RuntimeException("No SALT phrase configured");
+		configurationKey = System.getProperty(RisConfigurationConstants.PROPERTY_RIS_CONFIG_KEY, null); 
+		if (configurationKey == null || configurationKey.isEmpty()) {
+			logger.error("No configuration key set at 'kount.config.key' system variable");
+			throw new RuntimeException("No configuration key set");
 		}
 		
+		configurationKey = new String(Ascii85.decode(configurationKey), StandardCharsets.UTF_8);
+		
 		try {
-			String crypted = readCryptedSalt();
-			String currentCrypted = sha256(saltPhrase);
+			String crypted = readCryptedConfigurationKey();
+			String currentCrypted = sha256(configurationKey);
 			
 			if (!crypted.equals(currentCrypted)) {
-				logger.error("Configured SALT phrase is incorrect");
-				throw new IllegalArgumentException("Configured SALT phrase is incorrect");
+				logger.error("The configuration key is incorrect");
+				throw new IllegalArgumentException("The configuration key is incorrect");
 			}
 		} catch (NoSuchAlgorithmException nsae) {
-			logger.error("Could not verify SALT phrase", nsae);
-			throw new IllegalStateException("Could not verify SALT phrase");
+			logger.error("Could not verify the configuration key", nsae);
+			throw new IllegalStateException("Could not verify the configuration key");
 		}
 	}
 	
@@ -84,10 +87,10 @@ public final class Khash {
 		return hexString.toString();
 	}
 
-	private static String readCryptedSalt() {
+	private static String readCryptedConfigurationKey() {
 		try (Scanner scanner = 
 			new Scanner(Khash.class.getClassLoader()
-				.getResourceAsStream("correct.salt.crypt"), "UTF-8")) {
+				.getResourceAsStream("configuration.key.crypt"), "UTF-8")) {
 			
 			String line = scanner.nextLine();
 			return line;
@@ -143,7 +146,7 @@ public final class Khash {
 		final int aLength = 36;
 
 		StringBuilder hashed = new StringBuilder();
-		String sha1 = Khash.sha1(token + "." + saltPhrase);
+		String sha1 = Khash.sha1(token + "." + configurationKey);
 		for (int i = 0; i < loopMax; i += 2) {
 			hashed.append(ACCEPTABLE_CHARACTERS.charAt(Integer.parseInt(sha1.substring(i, hexChunk + i), 16) % aLength));
 		}
