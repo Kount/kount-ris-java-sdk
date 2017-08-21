@@ -15,7 +15,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <!--salt.phrase>put salt phrase here</salt.phrase-->
+    <!--config.key>put config key here</config.key-->
   </properties>
 
   <dependencies>
@@ -40,7 +40,7 @@
         <version>2.20</version>
         <configuration>
           <systemPropertyVariables>
-            <kount.ris.salt>${salt.phrase}</kount.ris.salt>
+            <kount.config.key>${config.key}</kount.config.key>
           </systemPropertyVariables>
         </configuration>
       </plugin>

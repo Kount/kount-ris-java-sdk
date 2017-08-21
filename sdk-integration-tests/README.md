@@ -9,8 +9,8 @@ Kount Java SDK Integration Tests
     * `JDK/JRE 1.7+`
 * How to build the SDK and run integration tests
     * setup maven
-    * obtain your SALT phrase from the Kount team
-    * run `mvn clean install -DargLine="-Dkount.ris.salt='...'"` in root directory
+    * obtain your configuration key from the Kount team
+    * run `mvn clean install -DargLine="-Dkount.config.key='...'"` in root directory
 * Setting up IDE projects
     * `eclipse` - run `mvn eclipse:eclipse` and import as existing project
     * IDEA - IDEA has automatic maven integration
