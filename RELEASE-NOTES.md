@@ -2,9 +2,9 @@ Version 7.0.0 changes
 ---------------------
 mm/dd/yyyy
 
-1. Introducing configuration key replacing the SALT phrase
-2. Maven improvements
-3. Code updates
+1. Introducing configuration key
+2. Removed the SALT phrase
+3. Maven improvements and code updates
 
 Version 6.5.2 changes
 ---------------------
