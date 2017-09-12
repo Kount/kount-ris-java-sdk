@@ -1,8 +1,8 @@
 Version 7.0.0 changes
 ---------------------
-mm/dd/yyyy
+09/12/2017
 
-1. Introducing configuration key
+1. Introducing configuration key - this breaks backward compatibility with older releases
 2. Removed the SALT phrase
 3. Maven improvements and code updates
 
