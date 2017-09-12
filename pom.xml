@@ -4,7 +4,7 @@
 
   <groupId>com.kount</groupId>
   <artifactId>kount-java-parent</artifactId>
-  <version>7.0.0</version>
+  <version>7.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <developers>
@@ -75,7 +75,7 @@
     <connection>scm:git:git@github.com:Kount/kount-ris-java-sdk.git</connection>
     <developerConnection>scm:git:git@github.com:Kount/kount-ris-java-sdk.git</developerConnection>
     <url>scm:git:git@github.com:Kount/kount-ris-java-sdk.git</url>
-    <tag>7.0.0</tag>
+    <tag>HEAD</tag>
   </scm>
 
 </project>
