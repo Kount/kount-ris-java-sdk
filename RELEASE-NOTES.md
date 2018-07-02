@@ -1,8 +1,9 @@
-Version 7.0.1 changes
+Version 7.1.0 changes
 ---------------------
-mm/dd/2018
+07/02/2017
 
-1. KOUNT-12433: ipv6 addresses now allowed by SDK validation
+1. Added support to pass an IPV6 address with the IPAD field. IMPORTANT NOTE: IPV6 
+    addresses are converted to a static IPV4 address within RIS (10.0.0.1).
 
 Version 7.0.0 changes
 ---------------------
