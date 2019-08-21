@@ -156,6 +156,15 @@ public class Response {
 	public String getScore() {
 		return this.params.get("SCOR");
 	}
+	
+	/**
+	 * Get the Kount Omniscore.
+	 * 
+	 * @return Omniscore
+	 */
+	public String getOmniscore() {
+		return this.params.get("OMNISCORE");
+	}
 
 	/**
 	 * Get the geox.
