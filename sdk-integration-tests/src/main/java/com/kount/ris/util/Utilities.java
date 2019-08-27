@@ -41,7 +41,7 @@ public final class Utilities {
 			.setIpAddress("131.206.45.21")
 			.setCart(Collections.singletonList(cartItem0))
 
-			.setVersion("0695")
+			.setVersion("0700")
 			.setMerchantId(merchantId)
 			.setPayment(payment)
 			.setSessionId(sessionId)
