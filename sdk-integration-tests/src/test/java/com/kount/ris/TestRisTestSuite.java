@@ -253,7 +253,7 @@ public class TestRisTestSuite {
 		
 		Update update = new Update();
 		update.setMode(UpdateMode.NO_RESPONSE);
-		update.setVersion("0695");
+		update.setVersion("0700");
 		update.setTransactionId(transactionId);
 		update.setMerchantId(MERCHANT_ID);
 		update.setSessionId(sessionId);
@@ -292,7 +292,7 @@ public class TestRisTestSuite {
 		
 		Update update = new Update();
 		update.setMode(UpdateMode.WITH_RESPONSE);
-		update.setVersion("0695");
+		update.setVersion("0700");
 		update.setMerchantId(MERCHANT_ID);
 		update.setTransactionId(transactionId);
 		update.setSessionId(sessionId);
