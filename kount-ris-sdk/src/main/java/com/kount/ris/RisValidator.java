@@ -8,8 +8,9 @@ import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -31,7 +32,7 @@ public class RisValidator {
 	/**
 	 * Logger.
 	 */
-	protected Log logger = LogFactory.getLog(RisValidator.class);
+	protected Logger logger = LogManager.getLogger(RisValidator.class);
 
 	/**
 	 * Default constructor for a RIS validator.

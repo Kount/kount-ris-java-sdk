@@ -8,8 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.kount.ris.util.KcEvent;
 import com.kount.ris.util.RisResponseException;
@@ -31,7 +31,7 @@ public class Response {
 	/**
 	 * Logger.
 	 */
-	protected static Log logger = LogFactory.getLog(Response.class);
+	protected static Logger logger = LogManager.getLogger(Response.class);
 
 	/**
 	 * Constructor for a response object that accepts a map of response data.

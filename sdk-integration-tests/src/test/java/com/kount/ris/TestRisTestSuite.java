@@ -7,7 +7,9 @@ import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -25,7 +27,7 @@ import com.kount.ris.util.Utilities;
 
 public class TestRisTestSuite {
 
-	private static final Logger logger = Logger.getLogger(TestRisTestSuite.class);
+	private static final Logger logger = LogManager.getLogger(TestRisTestSuite.class);
 	
 	private static KountRisClient client = null;
 	
