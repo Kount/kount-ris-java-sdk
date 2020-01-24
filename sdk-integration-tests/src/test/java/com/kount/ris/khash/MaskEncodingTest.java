@@ -5,7 +5,9 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.net.URL;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -19,7 +21,7 @@ import com.kount.ris.util.Utilities;
 import com.kount.ris.util.payment.CardPayment;
 
 public class MaskEncodingTest {
-	private static final Logger logger = Logger.getLogger(MaskEncodingTest.class);
+	private static final Logger logger = LogManager.getLogger(MaskEncodingTest.class);
 	
 	private static final int MERCHANT_ID = 999666;
 	

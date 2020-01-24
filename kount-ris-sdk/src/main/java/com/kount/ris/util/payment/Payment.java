@@ -1,7 +1,7 @@
 package com.kount.ris.util.payment;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * RIS payment type object.
@@ -40,7 +40,7 @@ public class Payment {
 	/**
 	 * Logger.
 	 */
-	protected Log logger = LogFactory.getLog(Payment.class);
+	protected Logger logger = LogManager.getLogger(Payment.class);
 
 	/**
 	 * Constructor for a payment that accepts the payment ID.

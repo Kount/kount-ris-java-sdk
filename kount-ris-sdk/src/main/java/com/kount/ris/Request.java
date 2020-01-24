@@ -4,8 +4,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.kount.ris.util.AuthorizationStatus;
 import com.kount.ris.util.BankcardReply;
@@ -39,7 +39,7 @@ public abstract class Request {
 	/**
 	 * Logger.
 	 */
-	protected Log logger = LogFactory.getLog(Request.class);
+	protected Logger logger = LogManager.getLogger(Request.class);
 
 	/**
 	 * Optional parameter for clients to close the transport when done.

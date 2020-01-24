@@ -5,7 +5,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Scanner;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.github.fzakaria.ascii85.Ascii85;
 import com.kount.ris.RisConfigurationConstants;
@@ -19,7 +20,7 @@ import com.kount.ris.RisConfigurationConstants;
  */
 public final class Khash {
 
-	private static final Logger logger = Logger.getLogger(Khash.class);
+	private static final Logger logger = LogManager.getLogger(Khash.class);
 	
 	private static final String ACCEPTABLE_CHARACTERS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 

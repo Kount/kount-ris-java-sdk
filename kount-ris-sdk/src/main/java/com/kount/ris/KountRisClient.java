@@ -10,8 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.kount.ris.transport.HttpApiTransport;
 import com.kount.ris.transport.KountHttpTransport;
@@ -37,7 +37,7 @@ public class KountRisClient {
 	/**
 	 * Logger.
 	 */
-	private static final Log logger = LogFactory.getLog(KountRisClient.class);
+	private static final Logger logger = LogManager.getLogger(KountRisClient.class);
 	
 	/**
 	 * Transport to use for sending RIS request.

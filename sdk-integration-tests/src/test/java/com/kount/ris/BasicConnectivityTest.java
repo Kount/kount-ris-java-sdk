@@ -5,7 +5,9 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.net.URL;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -14,7 +16,7 @@ import com.kount.ris.util.Utilities;
 
 public class BasicConnectivityTest {
 
-	private static final Logger logger = Logger.getLogger(BasicConnectivityTest.class);
+	private static final Logger logger = LogManager.getLogger(BasicConnectivityTest.class);
 	
 	private static KountRisClient client = null;
 	

@@ -16,8 +16,8 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.kount.ris.util.RisTransportException;
 
@@ -39,8 +39,8 @@ public class HttpApiTransport extends Transport {
 	/**
 	 * Logger.
 	 */
-	private static final Log logger = LogFactory.getLog(HttpApiTransport.class);
-
+	private static final Logger logger = LogManager.getLogger(HttpApiTransport.class);
+	
 	/**
 	 * SSL socket factory.
 	 */
