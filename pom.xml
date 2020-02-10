@@ -29,8 +29,9 @@
 
     <log4j-core.version>2.13.0</log4j-core.version>
     <log4j-api.version>2.13.0</log4j-api.version>
+	<jaxb-api.version>2.3.1</jaxb-api.version>
 
-    <junit.version>4.10</junit.version>
+    <junit.version>4.12</junit.version>
   </properties>
 
   <dependencyManagement>
@@ -46,7 +47,13 @@
 			<artifactId>log4j-api</artifactId>
 			<version>${log4j-api.version}</version>
 		</dependency>
-
+		
+		<dependency>
+			<groupId>javax.xml.bind</groupId>
+			<artifactId>jaxb-api</artifactId>
+			<version>${jaxb-api.version}</version>
+		</dependency>
+		
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
