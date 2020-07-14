@@ -419,4 +419,29 @@ public abstract class Request {
 		closeOnFinish = cof;
 		return this;
 	}
+
+	/**
+	 * Set the max connection Pool assigned by Kount.
+	 *
+	 * @param connectionPool
+	 *           max connection Pool
+	 * @return this
+	 */
+	public Request setMaxConnectionPool(int connectionPool) {
+		params.put("CONNPOOL", Integer.valueOf(connectionPool).toString());
+		return this;
+	}
+
+	/**
+	 * Set the max connections per route assigned by Kount.
+	 *
+	 * @param concurrentConn
+	 *          Max  Connection Per Route
+	 * @return this
+	 */
+	public Request setMaxConnPerRoute(int concurrentConn) {
+		params.put("CONCURRENTCONN", Integer.valueOf(concurrentConn).toString());
+		return this;
+	}
+
 }
