@@ -79,8 +79,8 @@ public class HttpApiTransport extends Transport {
 	protected int concurrentConn ;
 
 	/**
-	  * Creating the Client Connection Pool Manager by instantiating the
-	  * PoolingHttpClientConnectionManager class.
+	 * Creating the Client Connection Pool Manager by instantiating the
+	 * PoolingHttpClientConnectionManager class.
 	 */
 	protected PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
 
@@ -93,7 +93,7 @@ public class HttpApiTransport extends Transport {
 
 	/**
 	 * Constructor that accepts a RIS url and an api key as input.
-	 * 
+	 *
 	 * @param url RIS server url.
 	 * @param key API key.
 	 */
@@ -104,7 +104,7 @@ public class HttpApiTransport extends Transport {
 
 	/**
 	 * Set API Key.
-	 * 
+	 *
 	 * @param key String Kount Api Key (public) to use for authentication with RIS
 	 *            server.
 	 */
@@ -126,7 +126,7 @@ public class HttpApiTransport extends Transport {
 
 	/**
 	 * Send transaction data to RIS.
-	 * 
+	 *
 	 * @throws RisTransportException RIS transport exception
 	 * @param params Map of data to send
 	 * @return Reader for character stream returned by RIS
