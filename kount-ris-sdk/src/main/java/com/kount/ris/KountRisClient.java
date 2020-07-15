@@ -123,6 +123,23 @@ public class KountRisClient {
 	}
 
 	/**
+	 * Constructor for using API Key instead of Cert.
+	 *
+	 * @param url
+	 *            Ris server URL.
+	 * @param key
+	 *            API key (key data as a string).
+	 * @param connectionPoolThreads
+	 *            API key (key data as a int).
+	 * @param connectionPerRoute
+	 *            API key (key data as a int).
+	 */
+	public KountRisClient(URL url, String key, int connectionPoolThreads , int connectionPerRoute ) {
+		setApiKey(key);
+		transport = new HttpApiTransport(url, apiKey, connectionPoolThreads, connectionPerRoute );
+	}
+
+	/**
 	 * Set the transport object to use. If not specified the default transport
 	 * object used is KountHttpTransport.
 	 *

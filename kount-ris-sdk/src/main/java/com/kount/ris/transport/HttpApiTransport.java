@@ -64,21 +64,6 @@ public class HttpApiTransport extends Transport {
 	protected String apiKey;
 
 	/**
-	 * max connection timeout assigned in the class.
-	 */
-	protected int connTimeOut ;
-
-	/**
-	 * max connections pool assigned in the class.
-	 */
-	protected int connPool ;
-
-	/**
-	 * max connections per route assigned in the class.
-	 */
-	protected int concurrentConn ;
-
-	/**
 	 * Creating the Client Connection Pool Manager by instantiating the
 	 * PoolingHttpClientConnectionManager class.
 	 */
@@ -103,6 +88,21 @@ public class HttpApiTransport extends Transport {
 	}
 
 	/**
+	 * Constructor that accepts a RIS url and an api key as input.
+	 *
+	 * @param url RIS server url.
+	 * @param key API key.
+	 * @param connectionPoolThreads connection Pool Threads.
+	 * @param connectionPerRoute connection Per Route.
+	 */
+	public HttpApiTransport(URL url, String key,  int connectionPoolThreads , int connectionPerRoute) {
+		setRisServerUrl(url.toString());
+		setApiKey(key);
+		connManager.setMaxTotal(connectionPoolThreads);
+		connManager.setDefaultMaxPerRoute(connectionPerRoute);
+	}
+
+	/**
 	 * Set API Key.
 	 *
 	 * @param key String Kount Api Key (public) to use for authentication with RIS
@@ -112,16 +112,15 @@ public class HttpApiTransport extends Transport {
 		apiKey = key;
 	}
 
+
 	/**
 	 * Set max Connection Pool and max connection per Route.
 	 *
 	 * @param params Set max Connection Pool and max connection per Route with RIS
 	 *            server.
 	 */
-	public void setConnectionPool(Map<String, String> params){
-		connPool = (params.get("CONNPOOL") == null) ? 100 : (Integer.parseInt(params.get("CONNPOOL")));
-		concurrentConn = (params.get("CONCURRENTCONN") == null) ? 20 : (Integer.parseInt(params.get("CONCURRENTCONN")));
-		connTimeOut = (params.get("CONNTIMEOUT") == null  || (Integer.parseInt(params.get("CONNTIMEOUT")) < 10000)) ? 10000 : (Integer.parseInt(params.get("CONNTIMEOUT")));
+	public int getConnTimeOut(Map<String, String> params){
+		return (params.get("CONNTIMEOUT") == null  || (Integer.parseInt(params.get("CONNTIMEOUT")) < 10000)) ? 10000 : (Integer.parseInt(params.get("CONNTIMEOUT")));
 	}
 
 	/**
@@ -138,14 +137,6 @@ public class HttpApiTransport extends Transport {
 
 		Reader reader = null;
 		try {
-
-			setConnectionPool(params);
-			// Set the maximum number of connections in the pool
-			connManager.setMaxTotal(connPool);
-
-			//Set the maximum number of concurrent connections per route
-			connManager.setDefaultMaxPerRoute(concurrentConn);
-
 			// Create a ClientBuilder Object by setting the connection manager
 			HttpClientBuilder clientbuilder = HttpClients.custom().setConnectionManager(connManager);
 
@@ -155,7 +146,7 @@ public class HttpApiTransport extends Transport {
 							.setSoTimeout(5000)
 							.build())
 					.setDefaultRequestConfig(RequestConfig.custom()
-							.setConnectTimeout(connTimeOut)
+							.setConnectTimeout(getConnTimeOut(params))
 							.setSocketTimeout(5000)
 							.setCookieSpec(CookieSpecs.STANDARD_STRICT)
 							.build())
