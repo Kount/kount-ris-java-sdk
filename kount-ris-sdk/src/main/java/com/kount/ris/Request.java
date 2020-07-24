@@ -432,4 +432,16 @@ public abstract class Request {
 		return this;
 	}
 
+	/**
+	 * Set the socket timeout assigned by Kount.
+	 *
+	 * @param socketTimeout
+	 *          socket timeout
+	 * @return this
+	 */
+	public Request setSocketTimeOut(int socketTimeout) {
+		params.put("SOCKETIMEOUT", Integer.valueOf(socketTimeout).toString());
+		return this;
+	}
+
 }

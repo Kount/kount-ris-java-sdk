@@ -21,8 +21,8 @@
   </modules>
 
   <properties>
-    <maven.compiler.source>1.7</maven.compiler.source>
-    <maven.compiler.target>1.7</maven.compiler.target>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
     <maven.build.timestamp.format>yyyyMMdd'T'HHmmss</maven.build.timestamp.format>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.release.plugin.version>2.5.1</maven.release.plugin.version>
@@ -69,7 +69,20 @@
       </dependency>
 
     </dependencies>
-  </dependencyManagement>
+  </dependencyManagement><pluginRepositories>
+    <pluginRepository>
+        <id>central</id>
+        <name>Maven Plugin Repository</name>
+        <url>http://repo1.maven.org/maven2</url>
+        <layout>default</layout>
+        <snapshots>
+            <enabled>false</enabled>
+        </snapshots>
+        <releases>
+            <updatePolicy>never</updatePolicy>
+        </releases>
+    </pluginRepository>
+</pluginRepositories>
 
   <build>
     <plugins>

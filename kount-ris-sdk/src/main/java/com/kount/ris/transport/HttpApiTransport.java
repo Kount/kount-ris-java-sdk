@@ -11,21 +11,25 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 
-import com.kount.ris.Request;
 import org.apache.http.HttpEntity;
-import org.apache.http.NameValuePair;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
 import org.apache.http.config.SocketConfig;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -114,14 +118,25 @@ public class HttpApiTransport extends Transport {
 
 
 	/**
-	 * Set max Connection Pool and max connection per Route.
+	 * Set max Connection timeout.
 	 *
-	 * @param params Set max Connection Pool and max connection per Route with RIS
+	 * @param params Set max Connection timeout with RIS
 	 *            server.
 	 */
 	public int getConnTimeOut(Map<String, String> params){
 		return (params.get("CONNTIMEOUT") == null  || (Integer.parseInt(params.get("CONNTIMEOUT")) < 10000)) ? 10000 : (Integer.parseInt(params.get("CONNTIMEOUT")));
 	}
+
+	/**
+	 * Set max Connection timeout.
+	 *
+	 * @param params max Socket timeout with RIS
+	 *            server.
+	 */
+	public int getSocketTimeOut(Map<String, String> params){
+		return (params.get("SOCKETIMEOUT") == null  || (Integer.parseInt(params.get("SOCKETIMEOUT")) < 5000)) ? 5000 : (Integer.parseInt(params.get("SOCKETIMEOUT")));
+	}
+
 
 	/**
 	 * Send transaction data to RIS.
@@ -137,7 +152,9 @@ public class HttpApiTransport extends Transport {
 
 		Reader reader = null;
 		try {
-			// Create a ClientBuilder Object by setting the connection manager
+
+			BasicHttpClientConnectionManager connManager = new BasicHttpClientConnectionManager();
+			//builder.setConnectionManager( cm );
 			HttpClientBuilder clientbuilder = HttpClients.custom().setConnectionManager(connManager);
 
 			CloseableHttpClient httpClient = HttpClients.custom()
@@ -145,9 +162,10 @@ public class HttpApiTransport extends Transport {
 					.setDefaultSocketConfig(SocketConfig.custom()
 							.setSoTimeout(5000)
 							.build())
+					//.setSSLSocketFactory(sslsf)
 					.setDefaultRequestConfig(RequestConfig.custom()
 							.setConnectTimeout(getConnTimeOut(params))
-							.setSocketTimeout(5000)
+							.setSocketTimeout(getSocketTimeOut(params))
 							.setCookieSpec(CookieSpecs.STANDARD_STRICT)
 							.build())
 					.setConnectionManager(connManager)
