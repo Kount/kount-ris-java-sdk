@@ -48,6 +48,7 @@ public class TestRisTestSuite {
 		
 		URL serverUrl = new URL(TestConstants.RIS_ENDPOINT);
 		client = new KountRisClient(serverUrl, keyFile);
+		
 	}
 	
 	@Before
