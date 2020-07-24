@@ -128,7 +128,7 @@ public class HttpApiTransport extends Transport {
 	}
 
 	/**
-	 * Set max Connection timeout.
+	 * Set max Socket timeout.
 	 *
 	 * @param params max Socket timeout with RIS
 	 *            server.
@@ -154,7 +154,6 @@ public class HttpApiTransport extends Transport {
 		try {
 
 			BasicHttpClientConnectionManager connManager = new BasicHttpClientConnectionManager();
-			//builder.setConnectionManager( cm );
 			HttpClientBuilder clientbuilder = HttpClients.custom().setConnectionManager(connManager);
 
 			CloseableHttpClient httpClient = HttpClients.custom()
@@ -162,7 +161,6 @@ public class HttpApiTransport extends Transport {
 					.setDefaultSocketConfig(SocketConfig.custom()
 							.setSoTimeout(5000)
 							.build())
-					//.setSSLSocketFactory(sslsf)
 					.setDefaultRequestConfig(RequestConfig.custom()
 							.setConnectTimeout(getConnTimeOut(params))
 							.setSocketTimeout(getSocketTimeOut(params))
