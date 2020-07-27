@@ -61,7 +61,8 @@ public class HttpApiTransport extends Transport {
 	 * SSL socket factory.
 	 */
 	protected SSLSocketFactory factory = null;
-
+	
+	
 	/**
 	 * Cache the api key (minimize file reads to once per instatiation).
 	 */
@@ -72,6 +73,27 @@ public class HttpApiTransport extends Transport {
 	 * PoolingHttpClientConnectionManager class.
 	 */
 	protected PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
+	
+	/**
+	 *  connection TimeOut .
+	 */
+	private int connTimeOut;
+	
+	/**
+	 * SSL socket TimeOut.
+	 */
+	private int socketTimeOut ;
+
+	
+	/**
+	 * Connection Time To Live
+	 */
+	private int connectionTimeToLive;
+	
+	/**
+	 *So Timeout.
+	 */
+	private int soTimeout;
 
 	/**
 	 * Default transport constructor.
@@ -116,28 +138,22 @@ public class HttpApiTransport extends Transport {
 		apiKey = key;
 	}
 
-
 	/**
-	 * Set max Connection timeout.
+	 * Set Connection Config.
 	 *
-	 * @param params Set max Connection timeout with RIS
+	 * @param params Set max Connection timeout, Socket Timeout, Connection to Live, So Timeout with RIS
 	 *            server.
 	 */
-	public int getConnTimeOut(Map<String, String> params){
-		return (params.get("CONNTIMEOUT") == null  || (Integer.parseInt(params.get("CONNTIMEOUT")) < 10000)) ? 10000 : (Integer.parseInt(params.get("CONNTIMEOUT")));
+
+	protected void getConnectionmanager(Map<String, String> params)
+	{
+		this.connTimeOut = (params.get("CONNTIMEOUT") == null  || (Integer.parseInt(params.get("CONNTIMEOUT")) < 10000)) ? 10000 : (Integer.parseInt(params.get("CONNTIMEOUT")));
+		this.socketTimeOut = (params.get("SOCKETIMEOUT") == null  || (Integer.parseInt(params.get("SOCKETIMEOUT")) < 5000)) ? 5000 : (Integer.parseInt(params.get("SOCKETIMEOUT")));		
+		this.connectionTimeToLive = (params.get("CONNTIMETOLIVE") == null  || (Integer.parseInt(params.get("CONNTIMETOLIVE")) > 5)) ? 1 : (Integer.parseInt(params.get("CONNTIMETOLIVE")));
+		this.soTimeout = (params.get("SOTIMEOUT") == null  || (Integer.parseInt(params.get("SOTIMEOUT")) < 5000)) ? 5000 : (Integer.parseInt(params.get("SOTIMEOUT")));
 	}
 
-	/**
-	 * Set max Socket timeout.
-	 *
-	 * @param params max Socket timeout with RIS
-	 *            server.
-	 */
-	public int getSocketTimeOut(Map<String, String> params){
-		return (params.get("SOCKETIMEOUT") == null  || (Integer.parseInt(params.get("SOCKETIMEOUT")) < 5000)) ? 5000 : (Integer.parseInt(params.get("SOCKETIMEOUT")));
-	}
-
-
+	
 	/**
 	 * Send transaction data to RIS.
 	 *
@@ -152,18 +168,18 @@ public class HttpApiTransport extends Transport {
 
 		Reader reader = null;
 		try {
-
+			this.getConnectionmanager(params);
 			BasicHttpClientConnectionManager connManager = new BasicHttpClientConnectionManager();
 			HttpClientBuilder clientbuilder = HttpClients.custom().setConnectionManager(connManager);
 
 			CloseableHttpClient httpClient = HttpClients.custom()
-					.setConnectionTimeToLive(1, TimeUnit.MINUTES)
+					.setConnectionTimeToLive(this.connectionTimeToLive, TimeUnit.MINUTES)
 					.setDefaultSocketConfig(SocketConfig.custom()
-							.setSoTimeout(5000)
+							.setSoTimeout(this.soTimeout)
 							.build())
 					.setDefaultRequestConfig(RequestConfig.custom()
-							.setConnectTimeout(getConnTimeOut(params))
-							.setSocketTimeout(getSocketTimeOut(params))
+							.setConnectTimeout(this.connTimeOut)
+							.setSocketTimeout(this.socketTimeOut)
 							.setCookieSpec(CookieSpecs.STANDARD_STRICT)
 							.build())
 					.setConnectionManager(connManager)

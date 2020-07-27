@@ -443,5 +443,29 @@ public abstract class Request {
 		params.put("SOCKETIMEOUT", Integer.valueOf(socketTimeout).toString());
 		return this;
 	}
+	
+	/**
+	 * Set the connection Time To Live .
+	 *
+	 * @param connectionTimeToLive
+	 *          connection Time To Live
+	 * @return this
+	 */
+	public Request setConnectionTimeToLive(int connectionTimeToLive) {
+		params.put("CONNTIMETOLIVE", Integer.valueOf(connectionTimeToLive).toString());
+		return this;
+	}
+	
+	/**
+	 * Set the SoTimeout timeout .
+	 *
+	 * @param SoTimeout
+	 *          So timeout
+	 * @return this
+	 */
+	public Request setSoTimeout(int soTimeout) {
+		params.put("SOTIMEOUT", Integer.valueOf(soTimeout).toString());
+		return this;
+	}
 
 }
