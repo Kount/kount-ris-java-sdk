@@ -144,13 +144,15 @@ public class HttpApiTransport extends Transport {
 	 * @param params Set max Connection timeout, Socket Timeout, Connection to Live, So Timeout with RIS
 	 *            server.
 	 */
+	//we recommend connection time out,so time out value to be alteast 1000 and socket time out value to be atleast 5000 
+	//less than recommended may cause exception.
 
-	protected void getConnectionmanager(Map<String, String> params)
-	{
-		this.connTimeOut = (params.get("CONNTIMEOUT") == null  || (Integer.parseInt(params.get("CONNTIMEOUT")) < 10000)) ? 10000 : (Integer.parseInt(params.get("CONNTIMEOUT")));
-		this.socketTimeOut = (params.get("SOCKETIMEOUT") == null  || (Integer.parseInt(params.get("SOCKETIMEOUT")) < 5000)) ? 5000 : (Integer.parseInt(params.get("SOCKETIMEOUT")));		
-		this.connectionTimeToLive = (params.get("CONNTIMETOLIVE") == null  || (Integer.parseInt(params.get("CONNTIMETOLIVE")) > 5)) ? 1 : (Integer.parseInt(params.get("CONNTIMETOLIVE")));
-		this.soTimeout = (params.get("SOTIMEOUT") == null  || (Integer.parseInt(params.get("SOTIMEOUT")) < 5000)) ? 5000 : (Integer.parseInt(params.get("SOTIMEOUT")));
+	protected void getConnectionmanager(Map<String, String> params)	{
+		
+		this.connTimeOut = (params.get("CONNTIMEOUT") == null ) ? 1000 : (Integer.parseInt(params.get("CONNTIMEOUT")));
+		this.socketTimeOut = (params.get("SOCKETIMEOUT") == null) ? 5000 : (Integer.parseInt(params.get("SOCKETIMEOUT")));		
+		this.connectionTimeToLive = (params.get("CONNTIMETOLIVE") == null ) ? 1 : (Integer.parseInt(params.get("CONNTIMETOLIVE")));
+		this.soTimeout = (params.get("SOTIMEOUT") == null) ? 1000 : (Integer.parseInt(params.get("SOTIMEOUT")));		
 	}
 
 	
