@@ -427,6 +427,7 @@ public abstract class Request {
 	 *          connection timeout
 	 * @return this
 	 */
+	//Please be cautious if you choose to override the default settings for connection time out.	
 	public Request setConnectionTimeOut(int connTimeout) {
 		params.put("CONNTIMEOUT", Integer.valueOf(connTimeout).toString());
 		return this;
@@ -439,10 +440,12 @@ public abstract class Request {
 	 *          socket timeout
 	 * @return this
 	 */
+	//Please be cautious if you choose to override the default settings for socket time out
 	public Request setSocketTimeOut(int socketTimeout) {
 		params.put("SOCKETIMEOUT", Integer.valueOf(socketTimeout).toString());
 		return this;
 	}
+	
 	
 	/**
 	 * Set the connection Time To Live .
@@ -451,6 +454,7 @@ public abstract class Request {
 	 *          connection Time To Live
 	 * @return this
 	 */
+	//Please be cautious if you choose to override the default settings for connection time to live.
 	public Request setConnectionTimeToLive(int connectionTimeToLive) {
 		params.put("CONNTIMETOLIVE", Integer.valueOf(connectionTimeToLive).toString());
 		return this;
@@ -463,6 +467,7 @@ public abstract class Request {
 	 *          So timeout
 	 * @return this
 	 */
+	//Please be cautious if you choose to override the default settings for so time out.
 	public Request setSoTimeout(int soTimeout) {
 		params.put("SOTIMEOUT", Integer.valueOf(soTimeout).toString());
 		return this;

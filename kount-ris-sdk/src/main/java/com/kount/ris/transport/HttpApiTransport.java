@@ -144,8 +144,6 @@ public class HttpApiTransport extends Transport {
 	 * @param params Set max Connection timeout, Socket Timeout, Connection to Live, So Timeout with RIS
 	 *            server.
 	 */
-	//we recommend connection time out,so time out value to be alteast 1000 and socket time out value to be atleast 5000 
-	//less than recommended may cause exception.
 
 	protected void getConnectionmanager(Map<String, String> params)	{
 		
