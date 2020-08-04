@@ -1,21 +1,36 @@
 package com.kount.ris.transport;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
+import java.io.*;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.config.SocketConfig;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustStrategy;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.ssl.SSLContexts;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,8 +39,9 @@ import com.kount.ris.util.RisTransportException;
 /**
  * RIS http data transport class.
  * </p>
- * Works with JWT (JSON Web Token) authentication, following the RFC 7519 standard.
- * The used key is set as connection header with name 'X-Kount-Api-Key'.
+ * Works with JWT (JSON Web Token) authentication, following the RFC 7519
+ * standard. The used key is set as connection header with name
+ * 'X-Kount-Api-Key'.
  *
  * @author Kount &lt;custserv@kount.com&gt;
  * @version $Id$
@@ -35,21 +51,49 @@ public class HttpApiTransport extends Transport {
 
 	public static final String CUSTOM_HEADER_MERCHANT_ID = "X-Kount-Merc-Id";
 	public static final String CUSTOM_HEADER_API_KEY = "X-Kount-Api-Key";
-	
+
 	/**
 	 * Logger.
 	 */
 	private static final Logger logger = LogManager.getLogger(HttpApiTransport.class);
-	
+
 	/**
 	 * SSL socket factory.
 	 */
 	protected SSLSocketFactory factory = null;
-
+	
+	
 	/**
 	 * Cache the api key (minimize file reads to once per instatiation).
 	 */
 	protected String apiKey;
+
+	/**
+	 * Creating the Client Connection Pool Manager by instantiating the
+	 * PoolingHttpClientConnectionManager class.
+	 */
+	protected PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
+	
+	/**
+	 *  connection TimeOut .
+	 */
+	private int connTimeOut;
+	
+	/**
+	 * SSL socket TimeOut.
+	 */
+	private int socketTimeOut ;
+
+	
+	/**
+	 * Connection Time To Live
+	 */
+	private int connectionTimeToLive;
+	
+	/**
+	 *So Timeout.
+	 */
+	private int soTimeout;
 
 	/**
 	 * Default transport constructor.
@@ -60,11 +104,9 @@ public class HttpApiTransport extends Transport {
 
 	/**
 	 * Constructor that accepts a RIS url and an api key as input.
-	 * 
-	 * @param url
-	 *            RIS server url.
-	 * @param key
-	 *            API key.
+	 *
+	 * @param url RIS server url.
+	 * @param key API key.
 	 */
 	public HttpApiTransport(URL url, String key) {
 		setRisServerUrl(url.toString());
@@ -72,73 +114,104 @@ public class HttpApiTransport extends Transport {
 	}
 
 	/**
+	 * Constructor that accepts a RIS url and an api key as input.
+	 *
+	 * @param url RIS server url.
+	 * @param key API key.
+	 * @param connectionPoolThreads connection Pool Threads.
+	 * @param connectionPerRoute connection Per Route.
+	 */
+	public HttpApiTransport(URL url, String key,  int connectionPoolThreads , int connectionPerRoute) {
+		setRisServerUrl(url.toString());
+		setApiKey(key);
+		connManager.setMaxTotal(connectionPoolThreads);
+		connManager.setDefaultMaxPerRoute(connectionPerRoute);
+	}
+
+	/**
 	 * Set API Key.
-	 * 
-	 * @param key
-	 *            String Kount Api Key (public) to use for authentication with
-	 *            RIS server.
+	 *
+	 * @param key String Kount Api Key (public) to use for authentication with RIS
+	 *            server.
 	 */
 	public void setApiKey(String key) {
 		apiKey = key;
 	}
 
 	/**
+	 * Set Connection Config.
+	 *
+	 * @param params Set max Connection timeout, Socket Timeout, Connection to Live, So Timeout with RIS
+	 *            server.
+	 */
+
+	protected void getConnectionmanager(Map<String, String> params)	{
+		
+		this.connTimeOut = (params.get("CONNTIMEOUT") == null ) ? 1000 : (Integer.parseInt(params.get("CONNTIMEOUT")));
+		this.socketTimeOut = (params.get("SOCKETIMEOUT") == null) ? 5000 : (Integer.parseInt(params.get("SOCKETIMEOUT")));		
+		this.connectionTimeToLive = (params.get("CONNTIMETOLIVE") == null ) ? 1 : (Integer.parseInt(params.get("CONNTIMETOLIVE")));
+		this.soTimeout = (params.get("SOTIMEOUT") == null) ? 1000 : (Integer.parseInt(params.get("SOTIMEOUT")));		
+	}
+
+	
+	/**
 	 * Send transaction data to RIS.
-	 * 
-	 * @throws RisTransportException
-	 *             RIS transport exception
-	 * @param params
-	 *            Map of data to send
+	 *
+	 * @throws RisTransportException RIS transport exception
+	 * @param params Map of data to send
 	 * @return Reader for character stream returned by RIS
 	 */
 	public Reader send(Map<String, String> params) throws RisTransportException {
-		if (!params.containsKey("PTOK")	|| 
-				("KHASH".equals(params.get("PENC")) && null == params.get("PTOK"))) {
+		if (!params.containsKey("PTOK") || ("KHASH".equals(params.get("PENC")) && null == params.get("PTOK"))) {
 			params.put("PENC", "");
 		}
 
 		Reader reader = null;
 		try {
-			URL url = new URL(this.risServerUrl);
-			
-			HttpsURLConnection urlConn = (HttpsURLConnection) url.openConnection();
-			
-			urlConn.setSSLSocketFactory(this.getSslSocketFactory());
-			
-			urlConn.setDoInput(true);
-			urlConn.setDoOutput(true);
-			urlConn.setUseCaches(false);
-			urlConn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-			urlConn.setRequestProperty(CUSTOM_HEADER_API_KEY, 
-					URLEncoder.encode(this.apiKey, StandardCharsets.UTF_8.name()));
-			urlConn.setRequestProperty(CUSTOM_HEADER_MERCHANT_ID, 
-					URLEncoder.encode(params.get("MERC"), StandardCharsets.UTF_8.name()));
-			
-			urlConn.setConnectTimeout(this.connectTimeout);
-			urlConn.setReadTimeout(this.readTimeout);
+			this.getConnectionmanager(params);
+			BasicHttpClientConnectionManager connManager = new BasicHttpClientConnectionManager();
+			HttpClientBuilder clientbuilder = HttpClients.custom().setConnectionManager(connManager);
+
+			CloseableHttpClient httpClient = HttpClients.custom()
+					.setConnectionTimeToLive(this.connectionTimeToLive, TimeUnit.MINUTES)
+					.setDefaultSocketConfig(SocketConfig.custom()
+							.setSoTimeout(this.soTimeout)
+							.build())
+					.setDefaultRequestConfig(RequestConfig.custom()
+							.setConnectTimeout(this.connTimeOut)
+							.setSocketTimeout(this.socketTimeOut)
+							.setCookieSpec(CookieSpecs.STANDARD_STRICT)
+							.build())
+					.setConnectionManager(connManager)
+					.build();
+
+			HttpPost httpPost = new HttpPost(this.risServerUrl);
+
+			httpPost.addHeader("Content-Type", "application/x-www-form-urlencoded");
+			httpPost.addHeader(CUSTOM_HEADER_API_KEY, this.apiKey);
+			httpPost.addHeader(CUSTOM_HEADER_MERCHANT_ID, params.get("MERC"));
+			httpPost.setEntity(new UrlEncodedFormEntity(convertToNameValuePair(params)));
+
+			CloseableHttpResponse httpResponse = httpClient.execute(httpPost);
+			HttpEntity entity = httpResponse.getEntity();
+			reader =  new BufferedReader(new InputStreamReader(entity.getContent()));
 
 			long startTime = System.currentTimeMillis();
-			OutputStreamWriter out = new OutputStreamWriter(urlConn.getOutputStream(), "UTF-8");
-			writeParametersToOutput(out, params);
-			out.flush();
-			out.close();
-
-			reader = new BufferedReader(new InputStreamReader(urlConn.getInputStream()));
-			
 			long elapsed = (System.currentTimeMillis() - startTime);
-			
+
 			if (logger.isDebugEnabled()) {
 				StringBuilder builder = new StringBuilder();
 				builder.append("MERC = ").append(params.get("MERC"));
 				builder.append(" SESS = ").append(params.get("SESS"));
 				builder.append(" elapsed = ").append(elapsed).append(" ms.");
-				
+
 				logger.debug(builder.toString());
 			}
-		} catch (IOException ioe) {
+		} catch (Exception ioe) {
 			logger.error("Error fetching RIS response", ioe);
-			throw new RisTransportException("An error ocurred while getting the RIS response", ioe);
+			throw new RisTransportException("An error occurred while getting the RIS response", ioe);
 		}
+
 		return reader;
 	}
 
@@ -146,7 +219,7 @@ public class HttpApiTransport extends Transport {
 		if (this.factory != null) {
 			return this.factory;
 		}
-		
+
 		SSLContext ctx;
 		try {
 			ctx = SSLContext.getInstance("TLSv1.2");
