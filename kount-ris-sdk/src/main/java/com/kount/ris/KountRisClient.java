@@ -114,12 +114,46 @@ public class KountRisClient {
 	 *
 	 * @param url
 	 *            Ris server URL.
+	 * @param apiKeyFile
+	 *            API key (key data as a string).
+	 * @param connectionPoolThreads
+	 *            API key (key data as a int).
+	 * @param connectionPerRoute
+	 *            API key (key data as a int).
+	 */
+	public KountRisClient(URL url, File apiKeyFile, int connectionPoolThreads , int connectionPerRoute ) throws RisTransportException  {
+		getApiKey(apiKeyFile);
+		transport = new HttpApiTransport(url, apiKey, connectionPoolThreads, connectionPerRoute );
+	}
+
+	/**
+	 * Constructor for using API Key instead of Cert.
+	 *
+	 * @param url
+	 *            Ris server URL.
 	 * @param key
 	 *            API key (key data as a string).
 	 */
 	public KountRisClient(URL url, String key) {
 		setApiKey(key);
 		transport = new HttpApiTransport(url, apiKey);
+	}
+
+	/**
+	 * Constructor for using API Key instead of Cert.
+	 *
+	 * @param url
+	 *            Ris server URL.
+	 * @param key
+	 *            API key (key data as a string).
+	 * @param connectionPoolThreads
+	 *            API key (key data as a int).
+	 * @param connectionPerRoute
+	 *            API key (key data as a int).
+	 */
+	public KountRisClient(URL url, String key, int connectionPoolThreads , int connectionPerRoute ) {
+		setApiKey(key);
+		transport = new HttpApiTransport(url, apiKey, connectionPoolThreads, connectionPerRoute );
 	}
 
 	/**

@@ -48,6 +48,7 @@ public class TestRisTestSuite {
 		
 		URL serverUrl = new URL(TestConstants.RIS_ENDPOINT);
 		client = new KountRisClient(serverUrl, keyFile);
+
 	}
 	
 	@Before
@@ -287,14 +288,14 @@ public class TestRisTestSuite {
 	@Test
 	public void testModeXAfterModeQ_10() throws RisException, NoSuchAlgorithmException {
 		logger.debug("running testModeXAfterModeQ_10");
-		
+
 		Response response = client.process(inq);
 		logger.trace(response.toString());
-		
+
 		String transactionId = response.getTransactionId();
 		String sessionId = response.getSessionId();
 		String orderId = response.getOrderNumber();
-		
+
 		Update update = new Update();
 		update.setMode(UpdateMode.WITH_RESPONSE);
 		update.setVersion("0700");
@@ -310,15 +311,15 @@ public class TestRisTestSuite {
 		update.setAvsZipReply(BankcardReply.MATCH);
 		update.setAvsAddressReply(BankcardReply.MATCH);
 		update.setCvvReply(BankcardReply.MATCH);
-		
+
 		Response updateResponse = client.process(update);
 		logger.trace(updateResponse.toString());
-		
+
 		assertEquals("X", updateResponse.getMode());
 		assertEquals(transactionId, updateResponse.getTransactionId());
 		assertEquals(sessionId, updateResponse.getSessionId());
 		assertEquals(orderId, updateResponse.getOrderNumber());
-		
+
 		assertNotNull(updateResponse.getAuto());
 		assertNotNull(updateResponse.getScore());
 		assertNotNull(updateResponse.getGeox());
