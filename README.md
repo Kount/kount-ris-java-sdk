@@ -5,7 +5,7 @@ Kount Java SDK
 ### What is this repository for? ###
 
 * Contains sources, tests, and resources for the Kount Java SDK
-* SDK version: `7.2.1`
+* SDK version: `7.3.2`
 
 ### How do I get set up? ###
 
@@ -19,6 +19,14 @@ Kount Java SDK
 * Setting up IDE projects
     * `eclipse` - run `mvn eclipse:eclipse` and import as existing project
     * IDEA - IDEA has automatic maven integration
+    
+* Maven dependencies
+
+    `<dependency>
+        <groupId>com.kount</groupId>
+        <artifactId>kount-ris-sdk</artifactId>
+        <version>7.3.2</version>
+    </dependency>`
 
 ### Contribution guidelines ###
 
