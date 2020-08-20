@@ -1,40 +1,29 @@
 package com.kount.ris.transport;
 
-import java.io.*;
-import java.net.URL;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-
+import com.kount.ris.util.RisTransportException;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
 import org.apache.http.config.SocketConfig;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.socket.PlainConnectionSocketFactory;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.ssl.SSLContexts;
+import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.kount.ris.util.RisTransportException;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.URL;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * RIS http data transport class.
@@ -49,193 +38,179 @@ import com.kount.ris.util.RisTransportException;
  */
 public class HttpApiTransport extends Transport {
 
-	public static final String CUSTOM_HEADER_MERCHANT_ID = "X-Kount-Merc-Id";
-	public static final String CUSTOM_HEADER_API_KEY = "X-Kount-Api-Key";
+    public static final int DEFAULT_MAX_CONNECTIONS = 256;
+    public static final int DEFAULT_CONNECTION_IDLE_TIMEOUT_MINUTES = 1;
+    public static final int DEFAULT_CONNECTION_TIMEOUT_MS = 10000;
+    public static final int DEFAULT_SOCKET_TIMEOUT_MS = 10000;
+    public static final String CUSTOM_HEADER_MERCHANT_ID = "X-Kount-Merc-Id";
+    public static final String CUSTOM_HEADER_API_KEY = "X-Kount-Api-Key";
 
-	/**
-	 * Logger.
-	 */
-	private static final Logger logger = LogManager.getLogger(HttpApiTransport.class);
+    /**
+     * Logger.
+     */
+    private static final Logger logger = LogManager.getLogger(HttpApiTransport.class);
 
-	/**
-	 * SSL socket factory.
-	 */
-	protected SSLSocketFactory factory = null;
-	
-	
-	/**
-	 * Cache the api key (minimize file reads to once per instatiation).
-	 */
-	protected String apiKey;
+    private static final PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
 
-	/**
-	 * Creating the Client Connection Pool Manager by instantiating the
-	 * PoolingHttpClientConnectionManager class.
-	 */
-	protected PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
-	
-	/**
-	 *  connection TimeOut .
-	 */
-	private int connTimeOut;
-	
-	/**
-	 * SSL socket TimeOut.
-	 */
-	private int socketTimeOut ;
+    static {
+        connManager.setMaxTotal(DEFAULT_MAX_CONNECTIONS);
+        connManager.setDefaultMaxPerRoute(DEFAULT_MAX_CONNECTIONS);
+    }
 
-	
-	/**
-	 * Connection Time To Live
-	 */
-	private int connectionTimeToLive;
-	
-	/**
-	 *So Timeout.
-	 */
-	private int soTimeout;
+    /**
+     * Cache the api key (minimize file reads to once per instatiation).
+     */
+    protected String apiKey;
 
-	/**
-	 * Default transport constructor.
-	 */
-	public HttpApiTransport() {
-		// Do nothing
-	}
+    private CloseableHttpClient httpClient;
 
-	/**
-	 * Constructor that accepts a RIS url and an api key as input.
-	 *
-	 * @param url RIS server url.
-	 * @param key API key.
-	 */
-	public HttpApiTransport(URL url, String key) {
-		setRisServerUrl(url.toString());
-		setApiKey(key);
-	}
+    /**
+     * Connection Time To Live
+     */
+    private int connectionTimeToLive;
 
-	/**
-	 * Constructor that accepts a RIS url and an api key as input.
-	 *
-	 * @param url RIS server url.
-	 * @param key API key.
-	 * @param connectionPoolThreads connection Pool Threads.
-	 * @param connectionPerRoute connection Per Route.
-	 */
-	public HttpApiTransport(URL url, String key,  int connectionPoolThreads , int connectionPerRoute) {
-		setRisServerUrl(url.toString());
-		setApiKey(key);
-		connManager.setMaxTotal(connectionPoolThreads);
-		connManager.setDefaultMaxPerRoute(connectionPerRoute);
-	}
+    /**
+     * Default transport constructor.
+     */
+    public HttpApiTransport() {
+        connectTimeout = DEFAULT_CONNECTION_TIMEOUT_MS;
+        readTimeout = DEFAULT_SOCKET_TIMEOUT_MS;
+        connectionTimeToLive = DEFAULT_CONNECTION_IDLE_TIMEOUT_MINUTES;
+    }
 
-	/**
-	 * Set API Key.
-	 *
-	 * @param key String Kount Api Key (public) to use for authentication with RIS
-	 *            server.
-	 */
-	public void setApiKey(String key) {
-		apiKey = key;
-	}
+    /**
+     * Constructor that accepts a RIS url and an api key as input.
+     *
+     * @param url RIS server url.
+     * @param key API key.
+     */
+    public HttpApiTransport(URL url, String key) {
+        this();
+        setRisServerUrl(url.toString());
+        setApiKey(key);
+    }
 
-	/**
-	 * Set Connection Config.
-	 *
-	 * @param params Set max Connection timeout, Socket Timeout, Connection to Live, So Timeout with RIS
-	 *            server.
-	 */
+    /**
+     * Constructor that accepts a RIS url and an api key as input.
+     *
+     * @param url                    RIS server url.
+     * @param key                    API key.
+     * @param maxConnections         connection Pool Threads.
+     * @param maxConnectionsPerRoute connection Per Route.
+     */
+    public HttpApiTransport(URL url, String key, int maxConnections, int maxConnectionsPerRoute) {
+        this();
+        setRisServerUrl(url.toString());
+        setApiKey(key);
+        connManager.setMaxTotal(maxConnections);
+        connManager.setDefaultMaxPerRoute(maxConnectionsPerRoute);
+    }
 
-	protected void getConnectionmanager(Map<String, String> params)	{
-		
-		this.connTimeOut = (params.get("CONNTIMEOUT") == null ) ? 1000 : (Integer.parseInt(params.get("CONNTIMEOUT")));
-		this.socketTimeOut = (params.get("SOCKETIMEOUT") == null) ? 5000 : (Integer.parseInt(params.get("SOCKETIMEOUT")));		
-		this.connectionTimeToLive = (params.get("CONNTIMETOLIVE") == null ) ? 1 : (Integer.parseInt(params.get("CONNTIMETOLIVE")));
-		this.soTimeout = (params.get("SOTIMEOUT") == null) ? 1000 : (Integer.parseInt(params.get("SOTIMEOUT")));		
-	}
+    /**
+     * Set API Key.
+     *
+     * @param key String Kount Api Key (public) to use for authentication with RIS
+     *            server.
+     */
+    public void setApiKey(String key) {
+        apiKey = key;
+    }
 
-	
-	/**
-	 * Send transaction data to RIS.
-	 *
-	 * @throws RisTransportException RIS transport exception
-	 * @param params Map of data to send
-	 * @return Reader for character stream returned by RIS
-	 */
-	public Reader send(Map<String, String> params) throws RisTransportException {
-		if (!params.containsKey("PTOK") || ("KHASH".equals(params.get("PENC")) && null == params.get("PTOK"))) {
-			params.put("PENC", "");
-		}
+    /**
+     * Set Connection Time To Live.
+     *
+     * @param minutes integer specifying the connection time to live in minutes.
+     */
+    public void setConnectionTimeToLive(int minutes) {
+        connectionTimeToLive = minutes;
+    }
 
-		Reader reader = null;
-		try {
-			this.getConnectionmanager(params);
-			BasicHttpClientConnectionManager connManager = new BasicHttpClientConnectionManager();
-			HttpClientBuilder clientbuilder = HttpClients.custom().setConnectionManager(connManager);
+    private CloseableHttpClient getHttpClient() {
+        if (httpClient == null) {
+            synchronized (this) {
+                if (httpClient == null) {
+                    httpClient = HttpClients.custom()
+                            .setConnectionTimeToLive(connectionTimeToLive, TimeUnit.MINUTES)
+                            .setDefaultSocketConfig(SocketConfig.custom()
+                                    .setSoTimeout(this.readTimeout)
+                                    .build())
+                            .setDefaultRequestConfig(RequestConfig.custom()
+                                    .setConnectTimeout(this.connectTimeout)
+                                    .setSocketTimeout(this.readTimeout)
+                                    .setCookieSpec(CookieSpecs.STANDARD_STRICT)
+                                    .build())
+                            .setConnectionManager(connManager)
+                            .build();
+                }
+            }
+        }
 
-			CloseableHttpClient httpClient = HttpClients.custom()
-					.setConnectionTimeToLive(this.connectionTimeToLive, TimeUnit.MINUTES)
-					.setDefaultSocketConfig(SocketConfig.custom()
-							.setSoTimeout(this.soTimeout)
-							.build())
-					.setDefaultRequestConfig(RequestConfig.custom()
-							.setConnectTimeout(this.connTimeOut)
-							.setSocketTimeout(this.socketTimeOut)
-							.setCookieSpec(CookieSpecs.STANDARD_STRICT)
-							.build())
-					.setConnectionManager(connManager)
-					.build();
+        return httpClient;
+    }
 
-			HttpPost httpPost = new HttpPost(this.risServerUrl);
+    /**
+     * Send transaction data to RIS.
+     *
+     * @param params Map of data to send
+     * @return Reader for character stream returned by RIS
+     * @throws RisTransportException RIS transport exception
+     */
+    public Reader send(Map<String, String> params) throws RisTransportException {
+        if (!params.containsKey("PTOK") || ("KHASH".equals(params.get("PENC")) && null == params.get("PTOK"))) {
+            params.put("PENC", "");
+        }
 
-			httpPost.addHeader("Content-Type", "application/x-www-form-urlencoded");
-			httpPost.addHeader(CUSTOM_HEADER_API_KEY, this.apiKey);
-			httpPost.addHeader(CUSTOM_HEADER_MERCHANT_ID, params.get("MERC"));
-			httpPost.setEntity(new UrlEncodedFormEntity(convertToNameValuePair(params)));
+        Reader reader = null;
+        try {
+            long startTime = System.currentTimeMillis();
 
-			CloseableHttpResponse httpResponse = httpClient.execute(httpPost);
-			HttpEntity entity = httpResponse.getEntity();
-			reader =  new BufferedReader(new InputStreamReader(entity.getContent()));
+            HttpPost httpPost = new HttpPost(this.risServerUrl);
+            httpPost.addHeader("Content-Type", "application/x-www-form-urlencoded");
+            httpPost.addHeader(CUSTOM_HEADER_API_KEY, this.apiKey);
+            httpPost.addHeader(CUSTOM_HEADER_MERCHANT_ID, params.get("MERC"));
+            httpPost.setEntity(new UrlEncodedFormEntity(convertToNameValuePair(params)));
 
-			long startTime = System.currentTimeMillis();
-			long elapsed = (System.currentTimeMillis() - startTime);
+            try (CloseableHttpResponse httpResponse = getHttpClient().execute(httpPost)) {
+                //read all request data since we need to close the response object
+                reader = new InputStreamReader(readAllIntput(httpResponse.getEntity()));
 
-			if (logger.isDebugEnabled()) {
-				StringBuilder builder = new StringBuilder();
-				builder.append("MERC = ").append(params.get("MERC"));
-				builder.append(" SESS = ").append(params.get("SESS"));
-				builder.append(" elapsed = ").append(elapsed).append(" ms.");
+                if (logger.isDebugEnabled()) {
+                    long elapsed = (System.currentTimeMillis() - startTime);
 
-				logger.debug(builder.toString());
-			}
-		} catch (Exception ioe) {
-			logger.error("Error fetching RIS response", ioe);
-			throw new RisTransportException("An error occurred while getting the RIS response", ioe);
-		}
+                    StringBuilder builder = new StringBuilder();
+                    builder.append("MERC = ").append(params.get("MERC"));
+                    builder.append(" SESS = ").append(params.get("SESS"));
+                    builder.append(" elapsed = ").append(elapsed).append(" ms.");
 
-		return reader;
-	}
+                    logger.debug(builder.toString());
+                }
+            } catch (Exception e) {
+                throw e;
+            }
+        } catch (Exception ioe) {
+            logger.error("Error fetching RIS response", ioe);
+            throw new RisTransportException("An error occurred while getting the RIS response", ioe);
+        }
 
-	private SSLSocketFactory getSslSocketFactory() throws RisTransportException {
-		if (this.factory != null) {
-			return this.factory;
-		}
+        return reader;
+    }
 
-		SSLContext ctx;
-		try {
-			ctx = SSLContext.getInstance("TLSv1.2");
-		} catch (NoSuchAlgorithmException nsae) {
-			logger.error("Unable to create SSLContext of type TLSv1.2", nsae);
-			throw new RisTransportException("Unable to create SSLContext of type TLSv1.2", nsae);
-		}
+    public ByteArrayInputStream readAllIntput(HttpEntity entity) throws IOException {
+        try {
+            InputStream is = entity.getContent();
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            int nRead;
+            byte[] data = new byte[1024];
+            while ((nRead = is.read(data, 0, data.length)) != -1) {
+                buffer.write(data, 0, nRead);
+            }
 
-		try {
-			ctx.init(null, null, null);
-		} catch (KeyManagementException kme) {
-			logger.error("Unable to initialize SSLContext", kme);
-			throw new RisTransportException("Unable to initialize SSLContext", kme);
-		}
-
-		this.factory = ctx.getSocketFactory();
-		return this.factory;
-	}
+            buffer.flush();
+            return new ByteArrayInputStream(buffer.toByteArray());
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            EntityUtils.consume(entity);
+        }
+    }
 }
