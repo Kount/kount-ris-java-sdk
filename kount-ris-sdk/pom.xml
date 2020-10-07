@@ -68,8 +68,8 @@
 				<version>3.1.0</version>
 				<configuration>
 					<sourcepath>${project.basedir}/src/main</sourcepath>
-					<!--<aggregate>false</aggregate>
-					<additionalparam>${javadoc.opts}</additionalparam>-->
+					<aggregate>false</aggregate>
+					<additionalparam>${javadoc.opts}</additionalparam>
 					<additionalOptions>
 						<additionalOption>-Xdoclint:none</additionalOption>
 					</additionalOptions>
