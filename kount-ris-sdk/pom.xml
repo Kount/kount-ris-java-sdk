@@ -6,12 +6,12 @@
 	<parent>
 		<groupId>com.kount</groupId>
 		<artifactId>kount-java-parent</artifactId>
-		<version>7.3.4</version>
+		<version>7.3.5</version>
 	</parent>
 
 	<groupId>com.kount</groupId>
 	<artifactId>kount-ris-sdk</artifactId>
-	<version>7.3.4</version>
+	<version>7.3.5</version>
 	<packaging>jar</packaging>
 
 	<dependencies>
