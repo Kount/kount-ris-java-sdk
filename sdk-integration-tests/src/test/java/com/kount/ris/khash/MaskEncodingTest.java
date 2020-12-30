@@ -2,9 +2,11 @@ package com.kount.ris.khash;
 
 import static org.junit.Assert.*;
 
-import java.io.File;
+import java.io.InputStream;
 import java.net.URL;
+import java.util.Properties;
 
+import com.kount.ris.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -12,10 +14,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.kount.ris.Inquiry;
-import com.kount.ris.KountRisClient;
-import com.kount.ris.Response;
-import com.kount.ris.TestConstants;
 import com.kount.ris.util.RisException;
 import com.kount.ris.util.Utilities;
 import com.kount.ris.util.payment.CardPayment;
@@ -23,22 +21,36 @@ import com.kount.ris.util.payment.CardPayment;
 public class MaskEncodingTest {
 	private static final Logger logger = LogManager.getLogger(MaskEncodingTest.class);
 	
-	private static final int MERCHANT_ID = 999666;
-	
 	private static KountRisClient client = null;
 	
 	private String sessionId = null;
 	private Inquiry inq = null;
+	private static  String RIS_ENDPOINT;
+	private static  int MERCHANT_ID;
+	private static String KOUNT_API_KEY;
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		URL keyLocation = KountRisClient.class.getClassLoader().getResource("kount.apikey");
-		File keyFile = new File(keyLocation.getFile());
+		InputStream inputStream = BasicConnectivityTest.class.getClassLoader().getResourceAsStream("config.properties");
+		Properties properties=new Properties();
+		properties.load(inputStream);
+		String apiKey =  properties.getProperty("Ris.API.Key");
+		String merchantId = properties.getProperty("Ris.MerchantId");
 
-		logger.debug("API key file resolved to: " + keyFile.getAbsolutePath());
-		
-		URL serverUrl = new URL(TestConstants.RIS_ENDPOINT);
-		client = new KountRisClient(serverUrl, keyFile);
+		if (apiKey == null || merchantId == null) {
+			logger.debug("Unable to read config");
+			throw  new Exception("Unable to read config : Enter valid credential in config.properties file");
+		}
+		if ((apiKey.equals("")) ||merchantId.equals("")){
+			logger.debug("Enter valid credential in config.properties file");
+			throw  new Exception("Invalid Credentials : Enter valid credential in config.properties file");
+		}
+
+		KOUNT_API_KEY = apiKey;
+		RIS_ENDPOINT = properties.getProperty("Ris.Url");
+		MERCHANT_ID = Integer.parseInt(merchantId);
+		URL serverUrl = new URL(RIS_ENDPOINT);
+		client = new KountRisClient(serverUrl, KOUNT_API_KEY);
 	}
 	
 	@Before

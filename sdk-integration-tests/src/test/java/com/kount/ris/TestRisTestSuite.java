@@ -3,10 +3,11 @@ package com.kount.ris;
 import static org.junit.Assert.*;
 import static org.junit.matchers.JUnitMatchers.either;
 
-import java.io.File;
+import java.io.InputStream;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Properties;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,18 +37,32 @@ public class TestRisTestSuite {
 	
 	private String sessionId = null;
 	private Inquiry inq = null;
-	
-	private static final int MERCHANT_ID = 999666;
+	private static  String RIS_ENDPOINT;
+	private static  int MERCHANT_ID;
+	private static String KOUNT_API_KEY;
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		URL keyLocation = KountRisClient.class.getClassLoader().getResource("kount.apikey");
-		File keyFile = new File(keyLocation.getFile());
+		InputStream inputStream = BasicConnectivityTest.class.getClassLoader().getResourceAsStream("config.properties");
+		Properties properties=new Properties();
+		properties.load(inputStream);
+		String apiKey =  properties.getProperty("Ris.API.Key");
+		String merchantId = properties.getProperty("Ris.MerchantId");
 
-		logger.debug("API key file resolved to: " + keyFile.getAbsolutePath());
-		
-		URL serverUrl = new URL(TestConstants.RIS_ENDPOINT);
-		client = new KountRisClient(serverUrl, keyFile);
+		if (apiKey == null || merchantId == null) {
+			logger.debug("Unable to read config");
+			throw  new Exception("Unable to read config : Enter valid credential in config.properties file");
+		}
+		if ((apiKey.equals("")) ||merchantId.equals("")){
+			logger.debug("Enter valid credential in config.properties file");
+			throw  new Exception("Invalid Credentials : Enter valid credential in config.properties file");
+		}
+
+		KOUNT_API_KEY = apiKey;
+		RIS_ENDPOINT = properties.getProperty("Ris.Url");
+		MERCHANT_ID = Integer.parseInt(merchantId);
+		URL serverUrl = new URL(RIS_ENDPOINT);
+		client = new KountRisClient(serverUrl, KOUNT_API_KEY);
 
 	}
 	
