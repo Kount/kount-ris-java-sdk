@@ -32,13 +32,9 @@ public class BasicConnectivityTest {
 		String apiKey =  properties.getProperty("Ris.API.Key");
 		String merchantId = properties.getProperty("Ris.MerchantId");
 
-		if (apiKey == null || merchantId == null) {
+		if (apiKey == null || merchantId == null || (apiKey.equals("")) || merchantId.equals("")) {
 			logger.debug("Unable to read config");
 			throw  new Exception("Unable to read config : Enter valid credential in config.properties file");
-		}
-		if ((apiKey.equals("")) ||merchantId.equals("")){
-			logger.debug("Enter valid credential in config.properties file");
-			throw  new Exception("Invalid Credentials : Enter valid credential in config.properties file");
 		}
 
 		KOUNT_API_KEY = apiKey;
