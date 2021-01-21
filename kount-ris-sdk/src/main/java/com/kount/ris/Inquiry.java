@@ -36,10 +36,10 @@ public class Inquiry extends Request {
 	 * Set cash amount of any feasible goods.
 	 * 
 	 * @param cash
-	 *            int Cash amount of any feasible goods
+	 *            long Cash amount of any feasible goods
 	 * @return this
 	 */
-	public Inquiry setCash(int cash) {
+	public Inquiry setCash(long cash) {
 		this.params.put("CASH", String.valueOf(cash));
 		return this;
 	}
@@ -133,7 +133,7 @@ public class Inquiry extends Request {
 	 *            Transaction amount in lowest possible denomination of given currency
 	 * @return this
 	 */
-	public Inquiry setTotal(int total) {
+	public Inquiry setTotal(long total) {
 		this.params.put("TOTL", String.valueOf(total));
 		return this;
 	}
