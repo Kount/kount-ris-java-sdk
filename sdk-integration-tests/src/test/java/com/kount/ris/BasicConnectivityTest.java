@@ -42,7 +42,6 @@ public class BasicConnectivityTest {
 		
 		Response response = client.process(inq);
 		logger.trace(response.toString());
-
 		assertEquals("42", response.getScore());
 	}
 	
