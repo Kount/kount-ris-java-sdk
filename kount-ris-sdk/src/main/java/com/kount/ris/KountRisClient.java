@@ -8,7 +8,6 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,8 +18,6 @@ import com.kount.ris.transport.Transport;
 import com.kount.ris.util.RisException;
 import com.kount.ris.util.RisResponseException;
 import com.kount.ris.util.RisTransportException;
-import com.kount.ris.util.RisValidationException;
-import com.kount.ris.util.ValidationError;
 
 /**
  * Controller class for the Kount RIS SDK.
@@ -43,11 +40,6 @@ public class KountRisClient {
 	 * Transport to use for sending RIS request.
 	 */
 	protected Transport transport;
-
-	/**
-	 * Client side request validator.
-	 */
-	protected RisValidator validator = new RisValidator();
 
 	/**
 	 * StringBuilder to accumulate any error message found in the response being processed.
@@ -178,36 +170,16 @@ public class KountRisClient {
 	}
 
 	/**
-	 * Get the last combined message of client side validation errors encountered.
-	 *
-	 * @return Message
-	 */
-	public String getErrorMessage() {
-		return errorMessage.toString();
-	}
-
-	/**
-	 * Performs the actions of validating, sending, and parsing a RIS request.
+	 * Performs the actions of sending, and parsing a RIS request.
 	 *
 	 * @throws RisException
 	 *             A subclass of RisException will be thrown which will be of
-	 *             the type RisResponseException, RisTransportException, or
-	 *             RisValidationException.
+	 *             the type RisResponseException, RisTransportException.
 	 * @param r
 	 *            Request
 	 * @return Response
 	 */
 	public Response process(Request r) throws RisException {
-		List<ValidationError> errors = this.validate(r);
-		errorMessage = new StringBuilder();
-		
-		if (errors.size() > 0) {
-			for (ValidationError error : errors) {
-				errorMessage.append(error.toString()).append('\n');;
-			}
-			throw new RisValidationException(this.errorMessage.toString(), errors);
-		}
-
 		Reader reader = send(r);
 		Response responseObj = parse(reader);
 		if (r.closeOnFinish) {
@@ -218,21 +190,6 @@ public class KountRisClient {
 			}
 		}
 		return responseObj;
-	}
-
-	/**
-	 * Client side validate the data contained in a RIS request.
-	 *
-	 * @throws RisValidationException
-	 *             RIS validation exception
-	 * @param r
-	 *            Request object containing data to send to RIS
-	 * @return List of errors encountered as com.kount.ris.util.ValidationError
-	 *         objects
-	 */
-	protected List<ValidationError> validate(Request r) throws RisValidationException {
-		logger.trace("validate()");
-		return validator.validate(r.getParams());
 	}
 
 	/**
