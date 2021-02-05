@@ -54,7 +54,6 @@ public class BasicConnectivityTest {
 		
 		Response response = client.process(inq);
 		logger.trace(response.toString());
-		
 		assertEquals("42", response.getScore());
 	}
 	
@@ -70,6 +69,20 @@ public class BasicConnectivityTest {
 		
 		assertEquals("R", response.getAuto());
 	
+	}
+
+	@Test
+	public void testTotalAndCashWithLongType() throws RisException {
+		logger.debug("running get expected score test");
+		long total = 11111111111111L;
+		long cash = 111111111111111L;
+		Inquiry inq = getInquiry();
+		inq.setTotal(total);
+		inq.setCash(cash);
+		Response response = client.process(inq);
+		logger.trace(response.toString());
+
+		assertEquals(0, response.getErrorCount());
 	}
 	
 	private static Inquiry getInquiry() {
