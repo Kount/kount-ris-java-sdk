@@ -1,6 +1,7 @@
 package com.kount.ris;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -84,7 +85,36 @@ public class BasicConnectivityTest {
 
 		assertEquals(0, response.getErrorCount());
 	}
-	
+
+	@Test
+	public void testPreviouslyWhiteListedExistWithRisCallVersion_0710() throws RisException {
+		logger.debug("running get previously white listed test");		;
+		Inquiry inq = getInquiry();
+		inq.setVersion("0710");
+		Response response = client.process(inq);
+		logger.trace(response.toString());
+		assertTrue( response.getPreviouslyWhiteListed()!= null);
+	}
+
+	@Test
+	public void test3dSecureMerchantResponseExistWithRisCallVersion_0710() throws RisException {
+		logger.debug("running get 3D secure merchant response test");		;
+		Inquiry inq = getInquiry();
+		inq.setVersion("0710");
+		Response response = client.process(inq);
+		logger.trace(response.toString());
+		assertTrue( response.get3DSecureMerchantResponse() != null);
+	}
+
+	@Test
+	public void testDefaultRisCallVersion() throws RisException {
+		logger.debug("running default ris call version test");		;
+		Inquiry inq = getInquiry();
+		Response response = client.process(inq);
+		logger.trace(response.toString());
+		assertEquals("0710", response.getVersion());
+	}
+
 	private static Inquiry getInquiry() {
 		Inquiry inq = Utilities.defaultInquiry(Utilities.generateUniqueId(), 0);
 		inq.setMerchantId(MERCHANT_ID);
