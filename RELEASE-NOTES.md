@@ -1,3 +1,10 @@
+Version 7.3.7 changes
+---------------------
+10/03/2021
+
+1. Updated the default version of the RIS call to use version 0710
+2. Added new gatters respective to new RIS version
+
 Version 7.1.0 changes
 ---------------------
 07/02/2017
