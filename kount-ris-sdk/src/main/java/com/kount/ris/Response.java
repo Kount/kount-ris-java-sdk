@@ -915,4 +915,23 @@ public class Response {
 		return 0;
 	}
 
+	/**
+	 * Get the Previously WhiteListed.
+	 *
+	 * @return PREVIOUSLY_WHITELISTED
+	 */
+	public String getPreviouslyWhiteListed() {
+		return this.params.get("PREVIOUSLY_WHITELISTED");
+	}
+
+
+	/**
+	 * Get the 3D Secure Merchant Response.
+	 *
+	 * @return  3D_SECURE_MERCHANT_RESPONSE
+	 */
+	public String get3DSecureMerchantResponse() {
+		return this.params.get("3D_SECURE_MERCHANT_RESPONSE");
+	}
+
 }

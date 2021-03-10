@@ -51,7 +51,7 @@ public abstract class Request {
 	 * @throws RisException 
 	 */
 	public Request() {
-		setVersion("0700");
+		setVersion("0710");
 		setKhashPaymentEncoding(true);
 		params.put("SDK", "JAVA");
 	}

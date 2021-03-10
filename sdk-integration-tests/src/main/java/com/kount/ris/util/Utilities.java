@@ -40,8 +40,6 @@ public final class Utilities {
 			.setShippingPhoneNumber("555-777-1212")
 			.setIpAddress("131.206.45.21")
 			.setCart(Collections.singletonList(cartItem0))
-
-			.setVersion("0700")
 			.setMerchantId(merchantId)
 			.setPayment(payment)
 			.setSessionId(sessionId)

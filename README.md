@@ -5,7 +5,7 @@ Kount Java SDK
 ### What is this repository for? ###
 
 * Contains sources, tests, and resources for the Kount Java SDK
-* SDK version: `7.3.5`
+* SDK version: `7.3.7`
 
 ### How do I get set up? ###
 
@@ -25,7 +25,7 @@ Kount Java SDK
     `<dependency>
         <groupId>com.kount</groupId>
         <artifactId>kount-ris-sdk</artifactId>
-        <version>7.3.5</version>
+        <version>7.3.7</version>
     </dependency>`
 
 ### Contribution guidelines ###
