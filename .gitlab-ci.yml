@@ -1,0 +1,33 @@
+image: maven:3.6.0-jdk-8
+
+variables:
+  #MAVEN_CLI_OPTS: "-s .m2/settings.xml --batch-mode"
+  MAVEN_CLI_OPTS: "-s settings.xml --batch-mode"
+  GPG_CLI_OPTS: "--pinentry-mode loopback"
+  # GPG_PASSPHRASE: ${GPG_PASSPHRASE}
+
+before_script:
+  - echo ${SONATYPE_USERID}
+  - echo "$GPG_KEY" > private_key_sender.asc
+  - chmod 400 ./private_key_sender.asc
+  - echo '<?xml version="1.0" encoding="UTF-8"?><settings><servers><server><id>ossrh</id><username>'${SONATYPE_USERID}'</username><password>'${SONATYPE_PASSWORD}'</password></server></servers><profiles><profile><activation><activeByDefault>true</activeByDefault></activation><id>ossrh</id><properties><gpg.executable>gpg</gpg.executable><gpg.passphrase>'${GPG_PASSPHRASE}'</gpg.passphrase></properties></profile></profiles></settings>' > settings.xml
+  - chmod 400 ./settings.xml
+
+build:
+ stage: build
+ script:
+   - mvn $MAVEN_CLI_OPTS compile
+
+#test:
+# stage: test
+# script:
+#   - mvn $MAVEN_CLI_OPTS test
+   
+deploy:
+  stage: deploy
+  script:
+     - echo ${GPG_PASSPHRASE}
+     - gpg $GPG_CLI_OPTS --passphrase ${GPG_PASSPHRASE} --import ./private_key_sender.asc
+     - mvn $MAVEN_CLI_OPTS clean deploy -P release
+  only: 
+     - tags
