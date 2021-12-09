@@ -931,7 +931,7 @@ public class Response {
 	 * @return  3D_SECURE_MERCHANT_RESPONSE
 	 */
 	public String get3DSecureMerchantResponse() {
-		return this.params.get("3D_SECURE_MERCHANT_RESPONSE");
+		return this.params.get("THREE_DS_MERCHANT_RESPONSE");
 	}
 
 }
