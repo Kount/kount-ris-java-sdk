@@ -5,24 +5,21 @@
   <parent>
     <groupId>com.kount</groupId>
     <artifactId>kount-java-parent</artifactId>
-    <version>7.0.1-SNAPSHOT</version>
+    <version>7.3.7</version>
   </parent>
 
-  <groupId>com.kount</groupId>
   <artifactId>sdk-integration-tests</artifactId>
-  <version>7.0.1-SNAPSHOT</version>
   <name>sdk-integration-tests</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <!--config.key>put config key here</config.key-->
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>com.kount</groupId>
       <artifactId>kount-ris-sdk</artifactId>
-      <version>7.0.1-SNAPSHOT</version>
+      <version>7.3.7</version>
     </dependency>
 
     <dependency>
@@ -32,7 +29,7 @@
     </dependency>
   </dependencies>
 
-  <!--build>
+  <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -45,6 +42,6 @@
         </configuration>
       </plugin>
     </plugins>
-  </build-->
+  </build>
 
 </project>

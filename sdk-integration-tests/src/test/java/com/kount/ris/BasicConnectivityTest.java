@@ -3,17 +3,15 @@ package com.kount.ris;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.InputStream;
 import java.net.URL;
-import java.util.Properties;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.kount.ris.util.RisException;
+import com.kount.ris.util.TestConfiguration;
 import com.kount.ris.util.Utilities;
 
 public class BasicConnectivityTest {
@@ -21,29 +19,13 @@ public class BasicConnectivityTest {
 	private static final Logger logger = LogManager.getLogger(BasicConnectivityTest.class);
 	
 	private static KountRisClient client = null;
-	private static  String RIS_ENDPOINT;
-	private static  int MERCHANT_ID;
-	private static String KOUNT_API_KEY;
+	private static int merchantId;
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		InputStream inputStream = BasicConnectivityTest.class.getClassLoader().getResourceAsStream("config.properties");
-		Properties properties=new Properties();
-		properties.load(inputStream);
-		String apiKey =  properties.getProperty("Ris.API.Key");
-		String merchantId = properties.getProperty("Ris.MerchantId");
-
-		if (apiKey == null || merchantId == null || (apiKey.equals("")) || merchantId.equals("")) {
-			logger.debug("Unable to read config");
-			throw  new Exception("Unable to read config : Enter valid credential in config.properties file");
-		}
-
-		KOUNT_API_KEY = apiKey;
-		RIS_ENDPOINT = properties.getProperty("Ris.Url");
-		MERCHANT_ID = Integer.parseInt(merchantId);
-
-		URL serverUrl = new URL(RIS_ENDPOINT);
-		client = new KountRisClient(serverUrl, KOUNT_API_KEY);
+		merchantId = Integer.parseInt(TestConfiguration.getMerchantID());
+		URL serverUrl = new URL(TestConfiguration.getRisURL());
+		client = new KountRisClient(serverUrl, TestConfiguration.getRisAPIKey());
 	}
 	
 	@Test
@@ -117,7 +99,7 @@ public class BasicConnectivityTest {
 
 	private static Inquiry getInquiry() {
 		Inquiry inq = Utilities.defaultInquiry(Utilities.generateUniqueId(), 0);
-		inq.setMerchantId(MERCHANT_ID);
+		inq.setMerchantId(merchantId);
 		inq.setEmail("predictive@kount.com");
 		
 		return inq;

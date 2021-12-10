@@ -24,6 +24,7 @@
 
   <modules>
     <module>kount-ris-sdk</module>
+    <module>sdk-integration-tests</module>
   </modules>
 
   <properties>
