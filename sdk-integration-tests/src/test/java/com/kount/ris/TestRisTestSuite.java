@@ -1,17 +1,19 @@
 package com.kount.ris;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.matchers.JUnitMatchers.containsString;
 import static org.junit.matchers.JUnitMatchers.either;
 
-import java.io.InputStream;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.Properties;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -24,9 +26,9 @@ import com.kount.ris.util.KcEvent;
 import com.kount.ris.util.Khash;
 import com.kount.ris.util.MerchantAcknowledgment;
 import com.kount.ris.util.RisException;
+import com.kount.ris.util.TestConfiguration;
 import com.kount.ris.util.UpdateMode;
 import com.kount.ris.util.Utilities;
-import static org.junit.matchers.JUnitMatchers.*;
 
 
 public class TestRisTestSuite {
@@ -34,38 +36,22 @@ public class TestRisTestSuite {
 	private static final Logger logger = LogManager.getLogger(TestRisTestSuite.class);
 	
 	private static KountRisClient client = null;
-	
+	private static  int merchantId;
+
 	private String sessionId = null;
 	private Inquiry inq = null;
-	private static  String RIS_ENDPOINT;
-	private static  int MERCHANT_ID;
-	private static String KOUNT_API_KEY;
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		InputStream inputStream = BasicConnectivityTest.class.getClassLoader().getResourceAsStream("config.properties");
-		Properties properties=new Properties();
-		properties.load(inputStream);
-		String apiKey =  properties.getProperty("Ris.API.Key");
-		String merchantId = properties.getProperty("Ris.MerchantId");
-
-		if (apiKey == null || merchantId == null || (apiKey.equals("")) || merchantId.equals("")) {
-			logger.debug("Unable to read config");
-			throw  new Exception("Unable to read config : Enter valid credential in config.properties file");
-		}
-
-		KOUNT_API_KEY = apiKey;
-		RIS_ENDPOINT = properties.getProperty("Ris.Url");
-		MERCHANT_ID = Integer.parseInt(merchantId);
-		URL serverUrl = new URL(RIS_ENDPOINT);
-		client = new KountRisClient(serverUrl, KOUNT_API_KEY);
-
+		merchantId = Integer.parseInt(TestConfiguration.getMerchantID());
+		URL serverUrl = new URL(TestConfiguration.getRisURL());
+		client = new KountRisClient(serverUrl, TestConfiguration.getRisAPIKey());
 	}
 	
 	@Before
 	public void resetIdAndInquiry() {
 		this.sessionId = Utilities.generateUniqueId();
-		this.inq = Utilities.defaultInquiry(sessionId, MERCHANT_ID);
+		this.inq = Utilities.defaultInquiry(sessionId, merchantId);
 	}
 
 	@Test
@@ -272,7 +258,7 @@ public class TestRisTestSuite {
 		update.setMode(UpdateMode.NO_RESPONSE);
 		update.setVersion("0700");
 		update.setTransactionId(transactionId);
-		update.setMerchantId(MERCHANT_ID);
+		update.setMerchantId(merchantId);
 		update.setSessionId(sessionId);
 		update.setOrderNumber(orderId);
 		// PTOK has to be khashed manually because of its explicit setting
@@ -310,7 +296,7 @@ public class TestRisTestSuite {
 		Update update = new Update();
 		update.setMode(UpdateMode.WITH_RESPONSE);
 		update.setVersion("0700");
-		update.setMerchantId(MERCHANT_ID);
+		update.setMerchantId(merchantId);
 		update.setTransactionId(transactionId);
 		update.setSessionId(sessionId);
 		update.setOrderNumber(orderId);

@@ -18,10 +18,10 @@ build:
  script:
    - mvn $MAVEN_CLI_OPTS compile
 
-#test:
-# stage: test
-# script:
-#   - mvn $MAVEN_CLI_OPTS test
+test:
+ stage: test
+ script:
+   - mvn -DRis.MerchantId=${RIS_SDK_SANDBOX_MERCHANT_ID} -DRis.API.Key=${RIS_SDK_SANDBOX_API_KEY} -Dkount.config.key=$(echo ${RIS_CONFIG_KEY_BASE64} | openssl base64 -d) test
    
 deploy:
   stage: deploy
