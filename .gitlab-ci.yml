@@ -21,13 +21,13 @@ build:
 test:
  stage: test
  script:
-   - mvn -DRis.MerchantId=${RIS_SDK_SANDBOX_MERCHANT_ID} -DRis.API.Key=${RIS_SDK_SANDBOX_API_KEY} -Dkount.config.key=$(echo ${RIS_CONFIG_KEY_BASE64} | openssl base64 -d) test
+   - mvn -DRis.MerchantId=${RIS_SDK_SANDBOX_MERCHANT_ID} -DRis.API.Key=${RIS_SDK_SANDBOX_API_KEY} -Dkount.config.key=$(echo ${RIS_CONFIG_KEY_BASE64} | openssl base64 -d) $MAVEN_CLI_OPTS test
    
 deploy:
   stage: deploy
   script:
      - echo ${GPG_PASSPHRASE}
      - gpg $GPG_CLI_OPTS --passphrase ${GPG_PASSPHRASE} --import ./private_key_sender.asc
-     - mvn $MAVEN_CLI_OPTS clean deploy -P release
+     - mvn -DRis.MerchantId=${RIS_SDK_SANDBOX_MERCHANT_ID} -DRis.API.Key=${RIS_SDK_SANDBOX_API_KEY} -Dkount.config.key=$(echo ${RIS_CONFIG_KEY_BASE64} | openssl base64 -d) $MAVEN_CLI_OPTS clean deploy -P release
   only: 
      - tags
