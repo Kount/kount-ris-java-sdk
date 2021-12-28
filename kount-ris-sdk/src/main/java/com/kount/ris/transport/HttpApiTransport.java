@@ -62,7 +62,7 @@ public class HttpApiTransport extends Transport {
      */
     protected String apiKey;
 
-    private CloseableHttpClient httpClient;
+    private volatile CloseableHttpClient httpClient;
 
     /**
      * Connection Time To Live
@@ -130,6 +130,7 @@ public class HttpApiTransport extends Transport {
             synchronized (this) {
                 if (httpClient == null) {
                     httpClient = HttpClients.custom()
+                            .useSystemProperties()
                             .setConnectionTimeToLive(connectionTimeToLive, TimeUnit.MINUTES)
                             .setDefaultSocketConfig(SocketConfig.custom()
                                     .setSoTimeout(this.readTimeout)
@@ -160,7 +161,7 @@ public class HttpApiTransport extends Transport {
             params.put("PENC", "");
         }
 
-        Reader reader = null;
+        final Reader reader;
         try {
             long startTime = System.currentTimeMillis();
 
@@ -184,8 +185,6 @@ public class HttpApiTransport extends Transport {
 
                     logger.debug(builder.toString());
                 }
-            } catch (Exception e) {
-                throw e;
             }
         } catch (Exception ioe) {
             logger.error("Error fetching RIS response", ioe);
@@ -207,8 +206,6 @@ public class HttpApiTransport extends Transport {
 
             buffer.flush();
             return new ByteArrayInputStream(buffer.toByteArray());
-        } catch (Exception e) {
-            throw e;
         } finally {
             EntityUtils.consume(entity);
         }
