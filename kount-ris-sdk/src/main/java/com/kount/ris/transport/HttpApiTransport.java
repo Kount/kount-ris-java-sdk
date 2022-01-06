@@ -62,7 +62,7 @@ public class HttpApiTransport extends Transport {
      */
     protected String apiKey;
 
-    private volatile CloseableHttpClient httpClient;
+    private CloseableHttpClient httpClient;
 
     /**
      * Connection Time To Live
@@ -161,7 +161,7 @@ public class HttpApiTransport extends Transport {
             params.put("PENC", "");
         }
 
-        final Reader reader;
+        Reader reader = null;
         try {
             long startTime = System.currentTimeMillis();
 
