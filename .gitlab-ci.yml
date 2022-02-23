@@ -1,4 +1,15 @@
+include:
+  - project: kount/third_party/tpa-ci-shared
+    file: base/sq-scan.yml
+    ref: 2.4.0
+
 image: maven:3.6.0-jdk-8
+
+stages:
+  - build
+  - test
+  - sonarqube scan
+  - deploy
 
 variables:
   #MAVEN_CLI_OPTS: "-s .m2/settings.xml --batch-mode"
@@ -22,7 +33,14 @@ test:
  stage: test
  script:
    - mvn -DRis.MerchantId=${RIS_SDK_SANDBOX_MERCHANT_ID} -DRis.API.Key=${RIS_SDK_SANDBOX_API_KEY} -Dkount.config.key=$(echo ${RIS_CONFIG_KEY_BASE64} | openssl base64 -d) $MAVEN_CLI_OPTS test
-   
+
+sonarqube scan:
+  extends: .sq-scan
+  stage: sonarqube scan
+  allow_failure: true
+  variables:
+    SRC_EXCLUSIONS: "**/target/**,**/logs/**,**/bin/**,**/.m2/**,**/DS_Store/**,**/idea/**,**/*LICENSE,**/*.classpath,**/*.project,**/*.settings,**/*.gitignore,**/*.yml"
+
 deploy:
   stage: deploy
   script:
