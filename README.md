@@ -15,7 +15,7 @@ Kount Java SDK
     * `JDK/JRE 1.7+`
 * How to build the SDK and run integration tests
     * setup maven
-    * run `mvn clean install -DargLine="-Dkount.config.key='...'"` in root directory (if characters like `"`, `\``, or `'` are present, they need to be escaped)
+    * run `mvn clean install -Dkount.config.key='...'` in root directory (if characters like `"`, `\``, or `'` are present, they need to be escaped)
 * Setting up IDE projects
     * `eclipse` - run `mvn eclipse:eclipse` and import as existing project
     * IDEA - IDEA has automatic maven integration
