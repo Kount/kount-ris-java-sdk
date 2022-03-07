@@ -47,11 +47,16 @@ public abstract class Request {
 	protected boolean closeOnFinish;
 
 	/**
+	 * Config object holds SDK configuration information
+	 */
+	public static Config config = new Config();
+
+	/**
 	 * Class constructor.
 	 * @throws RisException 
 	 */
 	public Request() {
-		setVersion("0710");
+		setVersion(config.VERS);
 		setKhashPaymentEncoding(true);
 		params.put("SDK", "JAVA");
 	}
