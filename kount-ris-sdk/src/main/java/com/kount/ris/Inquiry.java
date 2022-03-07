@@ -29,7 +29,7 @@ public class Inquiry extends Request {
 		super();
 		setMode(InquiryMode.INITIAL_INQUIRY);
 		setCurrency("USD");
-		params.put("SDK_VERSION", "Sdk-Ris-Java-0632-20170321T1355");
+		params.put("SDK_VERSION", "Sdk-Ris-" + config.SDK + "-" + config.SDK_VERSION);
 	}
 
 	/**

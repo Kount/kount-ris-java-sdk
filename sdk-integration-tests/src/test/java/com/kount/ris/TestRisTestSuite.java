@@ -191,7 +191,7 @@ public class TestRisTestSuite {
 		
 		assertTrue("One or both warnings were not found in response", (throwAWarningPlease && notDefinedForMerchant));
 	}
-	
+
 	@Test
 		public void testRisWTwoKCRulesReview_7() throws RisException {
 		logger.debug("running testRisWTwoKCRulesReview_7");
@@ -204,9 +204,9 @@ public class TestRisTestSuite {
 		logger.trace(response.toString());
 
 		assertThat(response.getKcDecision(), either(containsString("R")).or(containsString("D")) );
-		assertEquals(0, response.getWarningCount());
-		assertEquals(0, response.getKcWarningCount());
-		assertEquals(2, response.getKcEventCount());
+		assertEquals("Warning count greater than 0. Warnings: " + response.getWarnings(), 0, response.getWarningCount());
+		assertEquals("KcWarningCount count greater than 0. Warnings: " + response.getKcWarnings(), 0, response.getKcWarningCount());
+		assertEquals("KcEventCount greater than 0. Warnings: " + response.getKcEvents(), 2, response.getKcEventCount());
 		
 		boolean billingToShipping = false;
 		boolean orderTotal = false;
