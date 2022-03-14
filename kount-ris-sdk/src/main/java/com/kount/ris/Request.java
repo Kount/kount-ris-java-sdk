@@ -424,4 +424,17 @@ public abstract class Request {
 		closeOnFinish = cof;
 		return this;
 	}
+	/**
+   * Set the Bank Identification Number.
+   * Number of digits should be in between 6 and 8
+   * 
+   * @param  lbin  
+   * 			Bank Identification Number
+   * @return this
+   */
+	public Request setLbin(String lbin) {
+		params.put("LBIN", lbin);
+		return this;
+	}
+
 }
