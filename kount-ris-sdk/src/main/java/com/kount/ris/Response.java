@@ -934,4 +934,13 @@ public class Response {
 		return this.params.get("THREE_DS_MERCHANT_RESPONSE");
 	}
 
+	/**
+	 * Get the Lbin.
+	 * 
+	 * @return Lbin
+	 */
+	public String getLbin() {
+		return this.params.get("LBIN");
+	}
+
 }
