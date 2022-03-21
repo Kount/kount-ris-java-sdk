@@ -105,7 +105,7 @@ public class BasicConnectivityTest {
 		System.out.println(inq.toString());
 		Response response = client.process(inq);
 		assertEquals(true, inq.getParams().containsKey("LBIN"));
-		assertEquals("Response",  response.getClass().toString());
+		assertEquals("[class com.kount.ris.]Response",  response.getClass().toString());
 	}
 
 	@Test
