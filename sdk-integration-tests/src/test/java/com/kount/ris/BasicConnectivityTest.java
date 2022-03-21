@@ -99,11 +99,13 @@ public class BasicConnectivityTest {
 
 	@Test
 	public void testRequstWithLbin() throws RisException {
-		logger.debug("creating RIS request with LBIN parameter ");
+		logger.debug("creating RIS request with LBIN parameter");
 		Inquiry inq = getInquiry();
 		inq.setLbin("12345123");
+		System.out.println(inq.toString());
+		Response response = client.process(inq);
 		assertEquals(true, inq.getParams().containsKey("LBIN"));
-
+		assertEquals("Response",  response.getClass().toString());
 	}
 
 	@Test
@@ -111,6 +113,7 @@ public class BasicConnectivityTest {
 		logger.debug("creating RIS request without LBIN parameter ");		
 		Inquiry inq = getInquiry();
 		assertEquals(false, inq.getParams().containsKey("LBIN"));
+		Response response = client.process(inq);
 	}
 
 	private static Inquiry getInquiry() {

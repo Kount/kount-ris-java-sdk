@@ -425,11 +425,10 @@ public abstract class Request {
 		return this;
 	}
 	/**
-   * Set the Bank Identification Number.
-   * Number of digits should be in between 6 and 8
+   * Set the Long Bank Identification Number.
    * 
    * @param  lbin  
-   * 			Bank Identification Number
+   * 			Long Bank Identification Number
    * @return this
    */
 	public Request setLbin(String lbin) {
