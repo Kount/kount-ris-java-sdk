@@ -102,10 +102,9 @@ public class BasicConnectivityTest {
 		logger.debug("creating RIS request with LBIN parameter");
 		Inquiry inq = getInquiry();
 		inq.setLbin("12345123");
-		System.out.println(inq.toString());
 		Response response = client.process(inq);
 		assertEquals(true, inq.getParams().containsKey("LBIN"));
-		assertEquals("class com.kount.ris.Response",  response.getClass().toString());
+		assertEquals(0, response.getErrorCount());
 	}
 
 	@Test
@@ -114,6 +113,7 @@ public class BasicConnectivityTest {
 		Inquiry inq = getInquiry();
 		assertEquals(false, inq.getParams().containsKey("LBIN"));
 		Response response = client.process(inq);
+		assertEquals(0, response.getErrorCount());
 	}
 
 	private static Inquiry getInquiry() {
