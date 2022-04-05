@@ -97,6 +97,25 @@ public class BasicConnectivityTest {
 		assertEquals("0710", response.getVersion());
 	}
 
+	@Test
+	public void testRequstWithLbin() throws RisException {
+		logger.debug("creating RIS request with LBIN parameter");
+		Inquiry inq = getInquiry();
+		inq.setLbin("12345123");
+		Response response = client.process(inq);
+		assertEquals(true, inq.getParams().containsKey("LBIN"));
+		assertEquals(0, response.getErrorCount());
+	}
+
+	@Test
+	public void testRequestWithoutLbin() throws RisException {
+		logger.debug("creating RIS request without LBIN parameter ");		
+		Inquiry inq = getInquiry();
+		assertEquals(false, inq.getParams().containsKey("LBIN"));
+		Response response = client.process(inq);
+		assertEquals(0, response.getErrorCount());
+	}
+
 	private static Inquiry getInquiry() {
 		Inquiry inq = Utilities.defaultInquiry(Utilities.generateUniqueId(), 0);
 		inq.setMerchantId(merchantId);

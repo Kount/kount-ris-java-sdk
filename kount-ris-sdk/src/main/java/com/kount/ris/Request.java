@@ -424,4 +424,16 @@ public abstract class Request {
 		closeOnFinish = cof;
 		return this;
 	}
+	/**
+   * Set the Long Bank Identification Number.
+   * 
+   * @param  lbin  
+   * 			Long Bank Identification Number
+   * @return this
+   */
+	public Request setLbin(String lbin) {
+		params.put("LBIN", lbin);
+		return this;
+	}
+
 }
