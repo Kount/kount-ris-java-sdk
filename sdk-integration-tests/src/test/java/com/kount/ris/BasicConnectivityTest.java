@@ -94,7 +94,8 @@ public class BasicConnectivityTest {
 		Inquiry inq = getInquiry();
 		Response response = client.process(inq);
 		logger.trace(response.toString());
-		assertEquals("0710", response.getVersion());
+		Config config = new Config();
+		assertEquals(config.VERS, response.getVersion());
 	}
 
 	@Test
