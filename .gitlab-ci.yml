@@ -35,6 +35,16 @@ variables:
         echo "sed -i \"s/0.0.0/${BUILD_VERSION}/g\" ${CI_PROJECT_DIR}/kount-ris-sdk/src/main/java/com/kount/ris/Config.java"
         sed -i "s/0.0.0/${BUILD_VERSION}/g" ${CI_PROJECT_DIR}/kount-ris-sdk/src/main/java/com/kount/ris/Config.java
         cat ${CI_PROJECT_DIR}/kount-ris-sdk/src/main/java/com/kount/ris/Config.java
+        POM_VERS=`echo $BUILD_VERSION`
+        if grep -q "-" <<< "$BUILD_VERSION";
+        then
+          BASE_VERS=`echo "$BUILD_VERSION" | sed 's/-.*//'`
+          NEXT_VERS=`echo "$BASE_VERS" | awk -vFS=. -vOFS=. '{++$NF;print}'`
+          POM_VERS="$NEXT_VERS-SNAPSHOT"
+        fi
+        echo ${POM_VERS}
+        mvn versions:set -DnewVersion=${POM_VERS}
+        mvn versions:update-child-modules
       fi
 
 build:
@@ -51,6 +61,9 @@ build:
     paths:
       - ${CI_PROJECT_DIR}/sdk-integration-tests/target
       - ${CI_PROJECT_DIR}/kount-ris-sdk/target
+      - ${CI_PROJECT_DIR}/sdk-integration-tests/pom.xml
+      - ${CI_PROJECT_DIR}/kount-ris-sdk/pom.xml
+      - ${CI_PROJECT_DIR}/pom.xml
 
 test:
   stage: test
