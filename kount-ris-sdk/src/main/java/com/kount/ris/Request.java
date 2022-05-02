@@ -49,7 +49,7 @@ public abstract class Request {
 	/**
 	 * Config object holds SDK configuration information
 	 */
-	public static Config config = new Config();
+	public static final Config config = new Config();
 
 	/**
 	 * Class constructor.

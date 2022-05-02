@@ -25,6 +25,8 @@ import javax.net.ssl.SSLSocketFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.kount.ris.Response;
+import com.kount.ris.util.RisResponseException;
 import com.kount.ris.util.RisTransportException;
 
 /**
@@ -130,48 +132,6 @@ public class KountHttpTransport extends Transport {
 		this.algorithm = a;
 	}
 
-	/**
-	 * Send transaction data to RIS.
-	 * 
-	 * @throws RisTransportException
-	 *             RIS transport exception
-	 * @param params
-	 *            Map of data to send
-	 * @return Reader for character stream returned by RIS
-	 */
-	public Reader send(Map<String, String> params) throws RisTransportException {
-		if (!params.containsKey("PTOK")
-				|| (params.containsKey("PENC") && "KHASH".equals(params.get("PENC")) && null == params.get("PTOK"))) {
-			params.put("PENC", "");
-		}
-
-		Reader reader = null;
-		try {
-			URL url = new URL(this.risServerUrl);
-
-			HttpsURLConnection urlConn = (HttpsURLConnection) url.openConnection();
-
-			urlConn.setSSLSocketFactory(this.getSSLSocketFactory());
-
-			urlConn.setDoInput(true);
-			urlConn.setDoOutput(true);
-			urlConn.setUseCaches(false);
-			urlConn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-			urlConn.setConnectTimeout(this.connectTimeout);
-			urlConn.setReadTimeout(this.readTimeout);
-
-			OutputStreamWriter out = new OutputStreamWriter(urlConn.getOutputStream(), "UTF-8");
-			writeParametersToOutput(out, params);
-			out.flush();
-			out.close();
-
-			reader = new BufferedReader(new InputStreamReader(urlConn.getInputStream()));
-		} catch (IOException ioe) {
-			logger.error("Error fetching RIS response", ioe);
-			throw new RisTransportException("An error ocurred while getting the RIS response", ioe);
-		}
-		return reader;
-	}
 
 	/**
 	 * Get an SSL Socket factory.
@@ -268,4 +228,54 @@ public class KountHttpTransport extends Transport {
 
 		return this.pkcs12In;
 	}
+
+	public Response sendResponse(Map<String, String> params) throws RisTransportException {
+		if (!params.containsKey("PTOK")
+				|| (params.containsKey("PENC") && "KHASH".equals(params.get("PENC")) && null == params.get("PTOK"))) {
+			params.put("PENC", "");
+		}
+
+		Reader reader = null;
+		try {
+			URL url = new URL(this.risServerUrl);
+
+			HttpsURLConnection urlConn = (HttpsURLConnection) url.openConnection();
+
+			urlConn.setSSLSocketFactory(this.getSSLSocketFactory());
+
+			urlConn.setDoInput(true);
+			urlConn.setDoOutput(true);
+			urlConn.setUseCaches(false);
+			urlConn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+			urlConn.setConnectTimeout(this.connectTimeout);
+			urlConn.setReadTimeout(this.readTimeout);
+
+			OutputStreamWriter out = new OutputStreamWriter(urlConn.getOutputStream(), "UTF-8");
+			writeParametersToOutput(out, params);
+			out.flush();
+			out.close();
+
+			reader = new BufferedReader(new InputStreamReader(urlConn.getInputStream()));
+
+			Response responseObj = parse(reader);             
+			try {
+				reader.close();
+			} catch (IOException e) {
+				throw new RisTransportException("Error closing reader", e);
+			}
+		
+		return responseObj; 
+
+		} catch (IOException | RisResponseException ioe) {
+			logger.error("Error fetching RIS response", ioe);
+			throw new RisTransportException("An error ocurred while getting the RIS response", ioe);
+		}
+ 
+	}
+
+	protected Response parse(Reader r) throws RisResponseException {
+		logger.trace("parse()");
+		return Response.parseResponse(r);
+	}
+
 }

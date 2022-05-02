@@ -180,31 +180,11 @@ public class KountRisClient {
 	 * @return Response
 	 */
 	public Response process(Request r) throws RisException {
-		Reader reader = send(r);
-		Response responseObj = parse(reader);
-		if (r.closeOnFinish) {
-			try {
-				reader.close();
-			} catch (IOException e) {
-				throw new RisTransportException("Error closing reader", e);
-			}
-		}
-		return responseObj;
-	}
-
-	/**
-	 * Send a RIS request.
-	 *
-	 * @throws RisTransportException
-	 *             RIS transport exception
-	 * @param r
-	 *            Request object to send.
-	 * @return Reader for character streams returned by RIS
-	 */
-	protected Reader send(Request r) throws RisTransportException {
-		logger.trace("send()");
+		logger.trace("process()");
 		if (transport != null) {
-			return transport.send(r.getParams());
+			
+			return   transport.sendResponse(r.getParams());
+
 		} else {
 			throw new RisTransportException("No transport was specified, unable to send request.");
 		}

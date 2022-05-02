@@ -1,5 +1,7 @@
 package com.kount.ris.transport;
 
+import com.kount.ris.Response;
+import com.kount.ris.util.RisResponseException;
 import com.kount.ris.util.RisTransportException;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.config.CookieSpecs;
@@ -15,6 +17,7 @@ import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -24,6 +27,7 @@ import java.io.Reader;
 import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
 
 /**
  * RIS http data transport class.
@@ -127,8 +131,7 @@ public class HttpApiTransport extends Transport {
 
     private CloseableHttpClient getHttpClient() {
         if (httpClient == null) {
-            synchronized (this) {
-                if (httpClient == null) {
+            synchronized (this) {             
                     httpClient = HttpClients.custom()
                             .useSystemProperties()
                             .setConnectionTimeToLive(connectionTimeToLive, TimeUnit.MINUTES)
@@ -142,57 +145,13 @@ public class HttpApiTransport extends Transport {
                                     .build())
                             .setConnectionManager(connManager)
                             .build();
-                }
+                
             }
         }
 
         return httpClient;
     }
 
-    /**
-     * Send transaction data to RIS.
-     *
-     * @param params Map of data to send
-     * @return Reader for character stream returned by RIS
-     * @throws RisTransportException RIS transport exception
-     */
-    public Reader send(Map<String, String> params) throws RisTransportException {
-        if (!params.containsKey("PTOK") || ("KHASH".equals(params.get("PENC")) && null == params.get("PTOK"))) {
-            params.put("PENC", "");
-        }
-
-        Reader reader = null;
-        try {
-            long startTime = System.currentTimeMillis();
-
-            HttpPost httpPost = new HttpPost(this.risServerUrl);
-            httpPost.addHeader("Content-Type", "application/x-www-form-urlencoded");
-            httpPost.addHeader(CUSTOM_HEADER_API_KEY, this.apiKey);
-            httpPost.addHeader(CUSTOM_HEADER_MERCHANT_ID, params.get("MERC"));
-            httpPost.setEntity(new UrlEncodedFormEntity(convertToNameValuePair(params)));
-
-            try (CloseableHttpResponse httpResponse = getHttpClient().execute(httpPost)) {
-                //read all request data since we need to close the response object
-                reader = new InputStreamReader(readAllIntput(httpResponse.getEntity()));
-
-                if (logger.isDebugEnabled()) {
-                    long elapsed = (System.currentTimeMillis() - startTime);
-
-                    StringBuilder builder = new StringBuilder();
-                    builder.append("MERC = ").append(params.get("MERC"));
-                    builder.append(" SESS = ").append(params.get("SESS"));
-                    builder.append(" elapsed = ").append(elapsed).append(" ms.");
-
-                    logger.debug(builder.toString());
-                }
-            }
-        } catch (Exception ioe) {
-            logger.error("Error fetching RIS response", ioe);
-            throw new RisTransportException("An error occurred while getting the RIS response", ioe);
-        }
-
-        return reader;
-    }
 
     public ByteArrayInputStream readAllIntput(HttpEntity entity) throws IOException {
         try {
@@ -210,4 +169,53 @@ public class HttpApiTransport extends Transport {
             EntityUtils.consume(entity);
         }
     }
+
+    public Response sendResponse(Map<String, String> params) throws RisTransportException {
+        if (!params.containsKey("PTOK") || ("KHASH".equals(params.get("PENC")) && null == params.get("PTOK"))) {
+            params.put("PENC", "");
+        }     
+        try {
+            long startTime = System.currentTimeMillis();
+
+            HttpPost httpPost = new HttpPost(this.risServerUrl);
+            httpPost.addHeader("Content-Type", "application/x-www-form-urlencoded");
+            httpPost.addHeader(CUSTOM_HEADER_API_KEY, this.apiKey);
+            httpPost.addHeader(CUSTOM_HEADER_MERCHANT_ID, params.get("MERC"));
+            httpPost.setEntity(new UrlEncodedFormEntity(convertToNameValuePair(params)));
+
+            try (CloseableHttpResponse httpResponse = getHttpClient().execute(httpPost);
+            Reader reader = new InputStreamReader(readAllIntput(httpResponse.getEntity()));  
+           )
+              {
+                if (logger.isDebugEnabled()) {
+                    long elapsed = (System.currentTimeMillis() - startTime);
+
+                    StringBuilder builder = new StringBuilder();
+                    builder.append("MERC = ").append(params.get("MERC"));
+                    builder.append(" SESS = ").append(params.get("SESS"));
+                    builder.append(" elapsed = ").append(elapsed).append(" ms.");
+
+                    logger.debug(builder.toString());
+                }
+                Response responseObj = parse(reader);
+              
+                    try {
+                        reader.close();
+                    } catch (IOException e) {
+                        throw new RisTransportException("Error closing reader", e);
+                    }
+                
+                return responseObj;  
+            }  
+           
+        } catch (Exception ioe) {
+            logger.error("Error fetching RIS response", ioe);
+            throw new RisTransportException("An error occurred while getting the RIS response", ioe);
+        }
+    }
+
+    protected Response parse(Reader r) throws RisResponseException {
+		logger.trace("parse()");
+		return Response.parseResponse(r);
+	}
 }

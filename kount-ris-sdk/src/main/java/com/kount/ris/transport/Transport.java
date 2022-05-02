@@ -1,5 +1,6 @@
 package com.kount.ris.transport;
 
+import com.kount.ris.Response;
 import com.kount.ris.util.RisTransportException;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -27,14 +28,15 @@ public abstract class Transport {
 
 	private static Object String;
 
-	/**
+
+		/**
 	 * Send transaction data to RIS.
 	 * 
 	 * @throws RisTransportException RIS transport exception
 	 * @param params Map of data to send
 	 * @return Reader for character stream returned by RIS
 	 */
-	public abstract Reader send(Map<String, String> params) throws RisTransportException;
+	public abstract Response sendResponse(Map<String, String> params) throws RisTransportException;
 
 	/**
 	 * Ris server endpoint url.
