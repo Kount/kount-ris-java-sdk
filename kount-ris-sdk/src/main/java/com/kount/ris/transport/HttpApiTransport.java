@@ -3,16 +3,24 @@ package com.kount.ris.transport;
 import com.kount.ris.Response;
 import com.kount.ris.util.RisResponseException;
 import com.kount.ris.util.RisTransportException;
+
+import org.apache.http.HeaderElement;
+import org.apache.http.HeaderElementIterator;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.config.SocketConfig;
+import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.message.BasicHeaderElementIterator;
+import org.apache.http.protocol.HTTP;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -131,26 +139,60 @@ public class HttpApiTransport extends Transport {
 
     private CloseableHttpClient getHttpClient() {
         if (httpClient == null) {
-            synchronized (this) {             
-                    httpClient = HttpClients.custom()
-                            .useSystemProperties()
-                            .setConnectionTimeToLive(connectionTimeToLive, TimeUnit.MINUTES)
-                            .setDefaultSocketConfig(SocketConfig.custom()
-                                    .setSoTimeout(this.readTimeout)
-                                    .build())
-                            .setDefaultRequestConfig(RequestConfig.custom()
-                                    .setConnectTimeout(this.connectTimeout)
-                                    .setSocketTimeout(this.readTimeout)
-                                    .setCookieSpec(CookieSpecs.STANDARD_STRICT)
-                                    .build())
-                            .setConnectionManager(connManager)
-                            .build();
-                
+            synchronized (this) {
+            	httpClient = HttpClients.custom()
+                        .useSystemProperties()
+                        .setConnectionTimeToLive(connectionTimeToLive, TimeUnit.MINUTES)
+                        .setDefaultSocketConfig(SocketConfig.custom()
+                                .setSoTimeout(this.readTimeout)
+                                .build())
+                        .setDefaultRequestConfig(RequestConfig.custom()
+                                .setConnectTimeout(this.connectTimeout)
+                                .setSocketTimeout(this.readTimeout)
+                                .setCookieSpec(CookieSpecs.STANDARD_STRICT)
+                                .build())
+                        .setConnectionManager(connManager)
+                        .setKeepAliveStrategy(getKeepAliveStrategy())
+                        .build();
             }
         }
 
         return httpClient;
     }
+
+	private ConnectionKeepAliveStrategy getKeepAliveStrategy() {
+		// Creating a custom keep alive strategy.
+		// Http 1.1 and higher assumes connection reuse/keep alive is by default supported.
+		// HttpClient 4.x.x assumes if there is no keep-alive header then the server supports indefinite keep-alive
+		// This _may_ have been the cause of connection reset errors reported (example: TRIAGE-1598)
+		// See more information from the random web experts at:
+		//  - https://blog.fearcat.in/a?ID=00001-0b18ac9b-843e-4dd1-bb03-b1fe4416f69a
+		//  - https://www.baeldung.com/httpclient-connection-management
+		// This can likely be removed if clients continue to see issues or after upgrading to HttpClient 5 which does not assume infinite keep-alive
+		
+		ConnectionKeepAliveStrategy keepAliveStrategy = new ConnectionKeepAliveStrategy() {
+			@Override
+			public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
+				// This implementation will attempt to honor the keep alive specified by the server in the Keep-Alive header before selecting a default value
+				HeaderElementIterator it = new BasicHeaderElementIterator(
+						response.headerIterator(HTTP.CONN_KEEP_ALIVE));
+				while (it.hasNext()) {
+					HeaderElement he = it.nextElement();
+					String param = he.getName();
+					String value = he.getValue();
+					if (value != null && param.equalsIgnoreCase("timeout")) {
+						try {
+							return Long.parseLong(value) * 1000;
+						} catch (NumberFormatException ignore) {
+							// Ignore. If we don't have a valid number in the header we will just use the default.
+						}
+					}
+				}
+				return 5000; // 5 seconds * 1000 ms
+			}
+		};
+		return keepAliveStrategy;
+	}
 
 
     public ByteArrayInputStream readAllIntput(HttpEntity entity) throws IOException {
