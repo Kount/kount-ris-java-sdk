@@ -80,7 +80,7 @@ sonarqube scan:
   stage: sonarqube scan
   allow_failure: true
   variables:
-    SRC_EXCLUSIONS: "**/target/**,**/logs/**,**/bin/**,**/.m2/**,**/DS_Store/**,**/idea/**,**/*LICENSE,**/*.classpath,**/*.project,**/*.settings,**/*.gitignore,**/*.yml"
+    SRC_EXCLUSIONS: "**/target/**,**/logs/**,**/bin/**,**/.m2/**,**/DS_Store/**,**/idea/**,**/*LICENSE,**/*.classpath,**/*.project,**/*.settings,**/*.gitignore,**/*.yml,**/test/**"
     JAVA_BINARIES_PATHS: "${CI_PROJECT_DIR}/kount-ris-sdk/target/classes/com/kount"
 
 deploy:
