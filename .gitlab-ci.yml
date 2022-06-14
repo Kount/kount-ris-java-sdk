@@ -4,7 +4,7 @@ include:
       - core/rules.yml
       - version.yml
       - base/sq-scan.yml
-    ref: 2.5.5
+    ref: 2.7.1
 
 stages:
   - version
@@ -73,7 +73,11 @@ test:
     - !reference [.rule-on-master]
     - !reference [.rule-on-mr]
   script:
-    - mvn -DRis.MerchantId=${RIS_SDK_SANDBOX_MERCHANT_ID} -DRis.API.Key=${RIS_SDK_SANDBOX_API_KEY} -Dkount.config.key=$(echo ${RIS_CONFIG_KEY_BASE64} | openssl base64 -d) $MAVEN_CLI_OPTS test
+    - mvn -DRis.MerchantId=${RIS_SDK_SANDBOX_MERCHANT_ID} -DRis.API.Key=${RIS_SDK_SANDBOX_API_KEY} -Dkount.config.key=$(echo ${RIS_CONFIG_KEY_BASE64} | openssl base64 -d) $MAVEN_CLI_OPTS verify
+    - mvn jacoco:report
+  artifacts:
+    paths:
+      - ${CI_PROJECT_DIR}/sdk-integration-tests/target/reports/jacoco-aggregate/jacoco.xml
    
 sonarqube scan:
   extends: .sq-scan
@@ -82,6 +86,7 @@ sonarqube scan:
   variables:
     SRC_EXCLUSIONS: "**/target/**,**/logs/**,**/bin/**,**/.m2/**,**/DS_Store/**,**/idea/**,**/*LICENSE,**/*.classpath,**/*.project,**/*.settings,**/*.gitignore,**/*.yml,**/test/**"
     JAVA_BINARIES_PATHS: "${CI_PROJECT_DIR}/kount-ris-sdk/target/classes/com/kount"
+    JACOCO_COVERAGE_REPORT_PATHS: "${CI_PROJECT_DIR}/sdk-integration-tests/target/reports/jacoco-aggregate/jacoco.xml"
 
 deploy:
   stage: deploy
