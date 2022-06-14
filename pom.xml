@@ -39,6 +39,7 @@
 	<jaxb-api.version>2.3.1</jaxb-api.version>
 	<httpclient.version>4.5.13</httpclient.version>
     <junit.version>4.13.1</junit.version>
+	<jacoco-maven-plugin.version>0.8.4</jacoco-maven-plugin.version>
   </properties>
   
   <licenses>
@@ -49,7 +50,7 @@
 		</license>
 	</licenses>
 	
-		<distributionManagement>
+	<distributionManagement>
 		<snapshotRepository>
 			<id>ossrh</id>
 			<url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
@@ -58,7 +59,6 @@
 			<id>ossrh</id>
 			<url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
 		</repository>
-
 	</distributionManagement>
 	
 	
@@ -194,19 +194,121 @@
     </dependencies>
   </dependencyManagement>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>${maven.release.plugin.version}</version>
-        <configuration>
-          <goals>deploy</goals>
-          <tagNameFormat>@{project.version}</tagNameFormat>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
+  <reporting>
+        <outputDirectory>target/reports</outputDirectory>
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco-maven-plugin.version}</version>
+            </plugin>
+        </plugins>
+    </reporting>
+
+  	<build>
+    	<plugins>
+			<plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>pre-unit-test</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                        <configuration>
+                            <propertyName>surefire.jacoco.args</propertyName>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>post-unit-test</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>pre-integration-test</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>prepare-agent-integration</goal>
+                        </goals>
+                        <configuration>
+                            <dumpOnExit>true</dumpOnExit>
+                            <propertyName>failsafe.jacoco.args</propertyName>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>post-integration-test</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report-aggregate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.20</version>
+				<configuration>
+				<argLine>${surefire.jacoco.args}</argLine>
+				<systemPropertyVariables>
+					<kount.config.key>${config.key}</kount.config.key>
+				</systemPropertyVariables>
+				<printSummary>true</printSummary>
+					<redirectTestOutputToFile>true</redirectTestOutputToFile>
+					<useFile>false</useFile>
+					<reportFormat>xml</reportFormat>
+					<runOrder>random</runOrder>
+				</configuration>
+				<executions>
+					<execution>
+						<id>default-test</id>
+						<configuration>
+							<skipTests>true</skipTests>
+						</configuration>
+					</execution>
+					<execution>
+						<id>unit-tests</id>
+						<phase>test</phase>
+						<goals>
+							<goal>test</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>2.22.2</version>
+				<configuration>
+					<argLine>${failsafe.jacoco.args}</argLine>
+					<printSummary>true</printSummary>
+					<redirectTestOutputToFile>true</redirectTestOutputToFile>
+					<useFile>false</useFile>
+					<reuseForks>false</reuseForks>
+					<forkCount>5</forkCount>
+					<reportFormat>xml</reportFormat>
+				</configuration>
+				<executions>
+					<execution>
+					<goals>
+						<goal>integration-test</goal>
+						<goal>verify</goal>
+					</goals>
+					<configuration>
+						<includes>
+							<include>**/*Test.java</include>
+							<include>**/Test*.java</include>
+						</includes>
+					</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+  	</build>
 
   <scm>
     <connection>scm:git:git@github.com:Kount/kount-ris-java-sdk.git</connection>
