@@ -38,4 +38,14 @@ public final class ShippingType extends Enum {
 	 * "ST". Standard shipping type.
 	 */
 	public static final ShippingType STANDARD = new ShippingType("ST");
+
+	/**
+	 * "DE". Delivery shipping type.
+	 */
+	public static final ShippingType DELIVERY = new ShippingType("DE");
+
+	/**
+	 * "PU". Pick-up shipping type.
+	 */
+	public static final ShippingType PICK_UP = new ShippingType("PU");
 }

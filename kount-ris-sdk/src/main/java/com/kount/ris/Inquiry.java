@@ -300,7 +300,8 @@ public class Inquiry extends Request {
 	/**
 	 * Set shipment type.
 	 * </p>
-	 * Accepted values: "SD" - Same Day, "ND" - Next Day, "2D" - Second Day, "ST" - Standard
+	 * Accepted values: "SD" - Same Day, "ND" - Next Day, "2D" - Second Day, 
+	 *                  "ST" - Standard, "DE" - Delivery, "PU" - Pick-up
 	 * 
 	 * @param shippingType
 	 *            Ship type
