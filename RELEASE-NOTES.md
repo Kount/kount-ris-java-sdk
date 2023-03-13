@@ -1,3 +1,12 @@
+Version 7.5.2 changes
+---------------------
+3/9/2023
+
+1. Upgraded dependent libraries
+2. Add two shipping types -- Delivery (DE) and Pick-up (PU)
+3. Add custom keep-alive strategy to httpclient connection manager
+4. Allow httpclient to use proxy values from system settings
+
 Version 7.3.7 changes
 ---------------------
 10/03/2021
