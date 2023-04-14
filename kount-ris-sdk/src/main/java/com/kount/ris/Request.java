@@ -345,7 +345,7 @@ public abstract class Request {
 			setPayment(new BillMeLaterPayment(ptok));
 		} else if ("CARD".equals(ptyp)) {
 			setPayment(new CardPayment(ptok));
-		} else if ("CHECK".equals(ptok)) {
+		} else if ("CHEK".equals(ptok) || "CHECK".equals(ptok)) {
 			setPayment(new CheckPayment(ptok));
 		} else if ("GIFT".equals(ptyp)) {
 			setPayment(new GiftCardPayment(ptok));
