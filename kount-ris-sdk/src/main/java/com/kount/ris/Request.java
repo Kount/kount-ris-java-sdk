@@ -116,8 +116,8 @@ public abstract class Request {
 	 *            Merchant ID
 	 * @return this
 	 */
-	public Request setMerchantId(int merchantId) {
-		params.put("MERC", Integer.valueOf(merchantId).toString());
+	public Request setMerchantId(long merchantId) {
+		params.put("MERC", Long.valueOf(merchantId).toString());
 		return this;
 	}
 
@@ -245,7 +245,7 @@ public abstract class Request {
 			}
 			try {
 				if (p instanceof GiftCardPayment) {
-					int merchantId = Integer.parseInt((String) params.get("MERC"));
+					long merchantId = Long.parseLong(params.get("MERC"));
 					token = Khash.getInstance().hashGiftCard(merchantId, token);
 				} else {
 					token = Khash.getInstance().hashPaymentToken(token);

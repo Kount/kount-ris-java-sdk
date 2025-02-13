@@ -366,8 +366,8 @@ public class Inquiry extends Request {
 			this.params.put("PROD_TYPE[" + index + "]", item.getProductType());
 			this.params.put("PROD_ITEM[" + index + "]", item.getItemName());
 			this.params.put("PROD_DESC[" + index + "]", item.getDescription());
-			this.params.put("PROD_QUANT[" + index + "]", new Integer(item.getQuantity()).toString());
-			this.params.put("PROD_PRICE[" + index + "]", new Integer(item.getPrice()).toString());
+			this.params.put("PROD_QUANT[" + index + "]", String.valueOf(item.getQuantity()));
+			this.params.put("PROD_PRICE[" + index + "]", String.valueOf(item.getPrice()));
 			index += 1;
 		}
 		return this;

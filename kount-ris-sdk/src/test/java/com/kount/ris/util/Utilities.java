@@ -15,7 +15,7 @@ public class Utilities {
 	private static final Address SHIPPING_ADDRESS = 
 			new Address("567 West S2A1 Court North", null, "Gnome", "AK", "99762", "US");
 
-	public static Inquiry defaultInquiry(String sessionId, int merchantId) {
+	public static Inquiry defaultInquiry(String sessionId, long merchantId) {
 		Inquiry result = new Inquiry();
 		Payment payment = new NoPayment(); 
 		

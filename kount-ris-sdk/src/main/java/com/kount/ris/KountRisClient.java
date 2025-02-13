@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.net.URL;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -18,6 +18,8 @@ import com.kount.ris.transport.Transport;
 import com.kount.ris.util.RisException;
 import com.kount.ris.util.RisResponseException;
 import com.kount.ris.util.RisTransportException;
+
+import javax.naming.ConfigurationException;
 
 /**
  * Controller class for the Kount RIS SDK.
@@ -96,7 +98,7 @@ public class KountRisClient {
 	 * @throws RisTransportException
 	 *             Exception if opening the api key file has a problem.
 	 */
-	public KountRisClient(URL url, File apiKeyFile) throws RisTransportException {
+	public KountRisClient(URL url, File apiKeyFile) throws RisTransportException, ConfigurationException {
 		getApiKey(apiKeyFile);
 		transport = new HttpApiTransport(url, apiKey);
 	}
@@ -113,7 +115,7 @@ public class KountRisClient {
 	 * @param connectionPerRoute
 	 *            API key (key data as a int).
 	 */
-	public KountRisClient(URL url, File apiKeyFile, int connectionPoolThreads , int connectionPerRoute ) throws RisTransportException  {
+	public KountRisClient(URL url, File apiKeyFile, int connectionPoolThreads , int connectionPerRoute ) throws RisTransportException, ConfigurationException {
 		getApiKey(apiKeyFile);
 		transport = new HttpApiTransport(url, apiKey, connectionPoolThreads, connectionPerRoute );
 	}
@@ -126,7 +128,7 @@ public class KountRisClient {
 	 * @param key
 	 *            API key (key data as a string).
 	 */
-	public KountRisClient(URL url, String key) {
+	public KountRisClient(URL url, String key) throws ConfigurationException {
 		setApiKey(key);
 		transport = new HttpApiTransport(url, apiKey);
 	}
@@ -139,11 +141,11 @@ public class KountRisClient {
 	 * @param key
 	 *            API key (key data as a string).
 	 * @param connectionPoolThreads
-	 *            API key (key data as a int).
+	 *            API key (key data as an int).
 	 * @param connectionPerRoute
-	 *            API key (key data as a int).
+	 *            API key (key data as an int).
 	 */
-	public KountRisClient(URL url, String key, int connectionPoolThreads , int connectionPerRoute ) {
+	public KountRisClient(URL url, String key, int connectionPoolThreads , int connectionPerRoute ) throws ConfigurationException {
 		setApiKey(key);
 		transport = new HttpApiTransport(url, apiKey, connectionPoolThreads, connectionPerRoute );
 	}
@@ -218,7 +220,7 @@ public class KountRisClient {
 		if (apiKey == null && apiKeyFile != null) {
 			try {
 				byte[] keyBytes = Files.readAllBytes(Paths.get(apiKeyFile.toURI()));
-				String key = new String(keyBytes, Charset.forName("UTF-8"));
+				String key = new String(keyBytes, StandardCharsets.UTF_8);
 				setApiKey(key.trim());
 			} catch (IOException e) {
 				logger.error("API Key file (" + apiKeyFile + ") could not be found:\n" + e);

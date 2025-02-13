@@ -3,6 +3,7 @@ package com.kount.ris.util;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Objects;
 import java.util.Scanner;
 
 import org.apache.logging.log4j.LogManager;
@@ -90,11 +91,10 @@ public final class Khash {
 
 	private static String readCryptedConfigurationKey() {
 		try (Scanner scanner = 
-			new Scanner(Khash.class.getClassLoader()
-				.getResourceAsStream("configuration.key.crypt"), "UTF-8")) {
-			
-			String line = scanner.nextLine();
-			return line;
+			new Scanner(Objects.requireNonNull(Khash.class.getClassLoader()
+                    .getResourceAsStream("configuration.key.crypt")), StandardCharsets.UTF_8)) {
+
+            return scanner.nextLine();
 		}
 	}
 
@@ -127,7 +127,7 @@ public final class Khash {
 	 *            Payment token to be hashed
 	 * @return hashed string
 	 */
-	public String hashGiftCard(int merchantId, String token) throws NoSuchAlgorithmException {
+	public String hashGiftCard(long merchantId, String token) throws NoSuchAlgorithmException {
 		return merchantId + this.hash(token);
 	}
 
