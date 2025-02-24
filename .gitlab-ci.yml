@@ -20,13 +20,14 @@ variables:
   # GPG_PASSPHRASE: ${GPG_PASSPHRASE}
 
 .maven:
-  image: maven:3.6.0-jdk-8
+  image: maven:amazoncorretto
   before_script:
     - echo ${SONATYPE_USERID}
     - echo "$GPG_KEY" > private_key_sender.asc
     - chmod 400 ./private_key_sender.asc
     - echo '<?xml version="1.0" encoding="UTF-8"?><settings><servers><server><id>ossrh</id><username>'${SONATYPE_USERID}'</username><password>'${SONATYPE_PASSWORD}'</password></server></servers><profiles><profile><activation><activeByDefault>true</activeByDefault></activation><id>ossrh</id><properties><gpg.executable>gpg</gpg.executable><gpg.passphrase>'${GPG_PASSPHRASE}'</gpg.passphrase></properties></profile></profiles></settings>' > settings.xml
     - chmod 400 ./settings.xml
+    - yum install -y openssl
     - |
       if [ -n "${BUILD_VERSION}" ]
       then
@@ -46,14 +47,65 @@ variables:
         mvn versions:set -DnewVersion=${POM_VERS}
         mvn versions:update-child-modules
       fi
+    - |
+        if [ -n "${PAYMENTS_FRAUD_API_ENDPOINT}" ]
+        then
+          HOST_NAME=$(echo ${PAYMENTS_FRAUD_API_ENDPOINT} | sed 's/https:\/\///' | sed 's/\//\//' | sed 's/\/.*//')
+          KEYSTORE_PATH=$JAVA_HOME/lib/security/cacerts
+          
+          # Download the certificate
+          echo "Downloading certificate from $HOST_NAME..."
+          # openssl s_client -servername $HOST_NAME -connect $HOST_NAME:443 < /dev/null | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > temp.crt
+          openssl s_client -showcerts -verify 5 -connect $HOST_NAME:443 < /dev/null | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > temp.crt
+          
+          if [ -s "temp.crt" ]; then
+          echo "Certificate downloaded successfully."
+          else
+          echo "Failed to download certificate."
+          exit 1
+          fi
+          
+          # Add the certificate to the keystore
+          echo "Adding certificate to keystore '$KEYSTORE_PATH' with alias '$HOST_NAME'..."
+          keytool -import -trustcacerts -alias "$HOST_NAME" -file "temp.crt" -keystore "$KEYSTORE_PATH" -noprompt
+          
+          if [ $? -eq 0 ]; then
+          echo "Certificate added to keystore successfully."
+          else
+          echo "Failed to add certificate to keystore."
+          fi
+          rm temp.crt
+        fi
+
+        HOST_NAME='risk.test.kount.net'
+        KEYSTORE_PATH=$JAVA_HOME/lib/security/cacerts
+      
+        # Download the certificate
+        echo "Downloading certificate from $HOST_NAME..."
+        # openssl s_client -servername $HOST_NAME -connect $HOST_NAME:443 < /dev/null | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > temp.crt
+        openssl s_client -showcerts -verify 5 -connect $HOST_NAME:443 < /dev/null | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > temp.crt
+      
+        if [ -s "temp.crt" ]; then
+        echo "Certificate downloaded successfully."
+        else
+        echo "Failed to download certificate."
+        exit 1
+        fi
+      
+        # Add the certificate to the keystore
+        echo "Adding certificate to keystore '$KEYSTORE_PATH' with alias '$HOST_NAME'..."
+        keytool -import -trustcacerts -alias "$HOST_NAME" -file "temp.crt" -keystore "$KEYSTORE_PATH" -noprompt
+      
+        if [ $? -eq 0 ]; then
+        echo "Certificate added to keystore successfully."
+        else
+        echo "Failed to add certificate to keystore."
+        fi
+        rm temp.crt
 
 build:
   stage: build
   extends: .maven
-  rules:
-    - !reference [.rule-on-tag]
-    - !reference [.rule-on-master]
-    - !reference [.rule-on-mr]
   script:
     - mvn $MAVEN_CLI_OPTS compile
 
@@ -68,12 +120,18 @@ build:
 test:
   stage: test
   extends: .maven
-  rules:
-    - !reference [.rule-on-tag]
-    - !reference [.rule-on-master]
-    - !reference [.rule-on-mr]
   script:
-    - mvn -DRis.MerchantId=${RIS_SDK_SANDBOX_MERCHANT_ID} -DRis.API.Key=${RIS_SDK_SANDBOX_API_KEY} -Dkount.config.key=$(echo ${RIS_CONFIG_KEY_BASE64} | openssl base64 -d) $MAVEN_CLI_OPTS verify
+    - mvn verify -e -Dsurefire.useFile=false -DRis.MerchantId=${RIS_SDK_SANDBOX_MERCHANT_ID} -DRis.API.Key=${RIS_SDK_SANDBOX_API_KEY} -Dkount.config.key=$(echo ${RIS_CONFIG_KEY_BASE64} | openssl base64 -d)
+    - mvn jacoco:report
+  artifacts:
+    paths:
+      - ${CI_PROJECT_DIR}/sdk-integration-tests/target/reports/jacoco-aggregate/jacoco.xml
+
+test migration:
+  stage: test
+  extends: .maven
+  script:
+    - mvn verify -e -Dsurefire.useFile=false -DRis.MerchantId=${RIS_SDK_SANDBOX_MERCHANT_ID} -DRis.API.Key=${RIS_SDK_SANDBOX_API_KEY} -Dkount.config.key=$(echo ${RIS_CONFIG_KEY_BASE64} | openssl base64 -d) -Dmigration.mode.enabled=true -Dpayments.fraud.api.key=${PAYMENTS_FRAUD_API_KEY} -Dpayments.fraud.api.endpoint=${PAYMENTS_FRAUD_API_ENDPOINT} -Dpayments.fraud.auth.endpoint=${PAYMENTS_FRAUD_AUTH_ENDPOINT} -Dpayments.fraud.client.id=${PAYMENTS_FRAUD_CLIENT_ID}
     - mvn jacoco:report
   artifacts:
     paths:

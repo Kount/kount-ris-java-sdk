@@ -15,7 +15,7 @@ public class Ascii85 {
 
     private final static int ASCII_SHIFT = 33;
 
-    private static int[] BASE85_POW = {
+    private static final int[] BASE85_POW = {
             1,
             85,
             85 * 85,
@@ -23,7 +23,7 @@ public class Ascii85 {
             85 * 85 * 85 *85
     };
 
-    private static Pattern REMOVE_WHITESPACE = Pattern.compile("\\s+");
+    private static final Pattern REMOVE_WHITESPACE = Pattern.compile("\\s+");
 
     private Ascii85() {
     }

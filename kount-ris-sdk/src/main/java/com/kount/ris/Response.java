@@ -830,8 +830,7 @@ public class Response {
 			logger.error("Error parsing RIS response", ioe);
 			throw new RisResponseException("Error parsing RIS response");
 		}
-		Response response = new Response(responseFields);
-		return response;
+        return new Response(responseFields);
 	}
 
 	/**

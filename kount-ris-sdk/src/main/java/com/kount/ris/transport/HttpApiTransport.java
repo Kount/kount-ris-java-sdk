@@ -1,40 +1,38 @@
 package com.kount.ris.transport;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kount.ris.Response;
+import com.kount.ris.RisConfigurationConstants;
 import com.kount.ris.util.RisResponseException;
 import com.kount.ris.util.RisTransportException;
-
-import org.apache.http.HeaderElement;
-import org.apache.http.HeaderElementIterator;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.config.CookieSpecs;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.config.SocketConfig;
-import org.apache.http.conn.ConnectionKeepAliveStrategy;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.message.BasicHeaderElementIterator;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.config.ConnectionConfig;
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.io.SocketConfig;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.pool.PoolConcurrencyPolicy;
+import org.apache.hc.core5.pool.PoolReusePolicy;
+import org.apache.hc.core5.util.TimeValue;
+import org.apache.hc.core5.util.Timeout;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import javax.naming.ConfigurationException;
+import java.io.*;
 import java.net.URL;
+import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.Objects;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 /**
@@ -56,13 +54,25 @@ public class HttpApiTransport extends Transport {
     public static final int DEFAULT_SOCKET_TIMEOUT_MS = 10000;
     public static final String CUSTOM_HEADER_MERCHANT_ID = "X-Kount-Merc-Id";
     public static final String CUSTOM_HEADER_API_KEY = "X-Kount-Api-Key";
+    public static final String PF_AUTH_HEADER = "Authorization";
 
     /**
      * Logger.
      */
     private static final Logger logger = LogManager.getLogger(HttpApiTransport.class);
 
-    private static final PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
+    private static final PoolingHttpClientConnectionManager connManager = PoolingHttpClientConnectionManagerBuilder.create()
+            .setDefaultSocketConfig(SocketConfig.custom()
+                    .setSoTimeout(Timeout.ofMinutes(1))
+                    .build())
+            .setPoolConcurrencyPolicy(PoolConcurrencyPolicy.STRICT)
+            .setConnPoolPolicy(PoolReusePolicy.FIFO)
+            .setDefaultConnectionConfig(ConnectionConfig.custom()
+                    .setSocketTimeout(Timeout.ofMilliseconds(DEFAULT_SOCKET_TIMEOUT_MS))
+                    .setConnectTimeout(Timeout.ofMilliseconds(DEFAULT_CONNECTION_TIMEOUT_MS))
+                    .setTimeToLive(TimeValue.ofMinutes(DEFAULT_CONNECTION_IDLE_TIMEOUT_MINUTES))
+                    .build())
+            .build();
 
     static {
         connManager.setMaxTotal(DEFAULT_MAX_CONNECTIONS);
@@ -76,6 +86,17 @@ public class HttpApiTransport extends Transport {
 
     private CloseableHttpClient httpClient;
 
+    private static boolean migrationModeEnabled = false;
+    private static boolean initialized = false;
+    private static String paymentsFraudApiEndpoint = "";
+    private static String paymentsFraudAuthEndpoint = "";
+    private static String paymentsFraudClientId = "";
+    private static String paymentsFraudApiKey = "";
+    private static BearerAuthResponse bearer = new BearerAuthResponse();
+    private static final ReentrantReadWriteLock bearerRWLock = new ReentrantReadWriteLock();
+    private static final Lock bearerReadLock = bearerRWLock.readLock();
+    private static final Lock bearerWriteLock = bearerRWLock.writeLock();
+
     /**
      * Connection Time To Live
      */
@@ -84,10 +105,11 @@ public class HttpApiTransport extends Transport {
     /**
      * Default transport constructor.
      */
-    public HttpApiTransport() {
+    public HttpApiTransport() throws ConfigurationException {
         connectTimeout = DEFAULT_CONNECTION_TIMEOUT_MS;
         readTimeout = DEFAULT_SOCKET_TIMEOUT_MS;
         connectionTimeToLive = DEFAULT_CONNECTION_IDLE_TIMEOUT_MINUTES;
+        checkMigrationMode();
     }
 
     /**
@@ -96,10 +118,11 @@ public class HttpApiTransport extends Transport {
      * @param url RIS server url.
      * @param key API key.
      */
-    public HttpApiTransport(URL url, String key) {
+    public HttpApiTransport(URL url, String key) throws ConfigurationException {
         this();
         setRisServerUrl(url.toString());
         setApiKey(key);
+        checkMigrationMode();
     }
 
     /**
@@ -110,12 +133,13 @@ public class HttpApiTransport extends Transport {
      * @param maxConnections         connection Pool Threads.
      * @param maxConnectionsPerRoute connection Per Route.
      */
-    public HttpApiTransport(URL url, String key, int maxConnections, int maxConnectionsPerRoute) {
+    public HttpApiTransport(URL url, String key, int maxConnections, int maxConnectionsPerRoute) throws ConfigurationException {
         this();
         setRisServerUrl(url.toString());
         setApiKey(key);
         connManager.setMaxTotal(maxConnections);
         connManager.setDefaultMaxPerRoute(maxConnectionsPerRoute);
+        checkMigrationMode();
     }
 
     /**
@@ -137,22 +161,99 @@ public class HttpApiTransport extends Transport {
         connectionTimeToLive = minutes;
     }
 
+    private void checkMigrationMode() throws ConfigurationException {
+        String migrationModeStr = System.getProperty(RisConfigurationConstants.PROPERTY_MIGRATION_MODE_ENABLED, "false");
+        migrationModeEnabled = Boolean.parseBoolean(migrationModeStr);
+
+        if (migrationModeEnabled && !initialized) {
+
+            paymentsFraudApiEndpoint = System.getProperty(RisConfigurationConstants.PROPERTY_PAYMENTS_FRAUD_API_ENDPOINT, "");
+            if (Objects.equals(paymentsFraudApiEndpoint, "")){
+                throw new ConfigurationException("Migration mode is enabled but '" + RisConfigurationConstants.PROPERTY_PAYMENTS_FRAUD_API_ENDPOINT + "' is not configured");
+            }
+
+            paymentsFraudAuthEndpoint = System.getProperty(RisConfigurationConstants.PROPERTY_PAYMENTS_FRAUD_AUTH_ENDPOINT, "");
+            if (Objects.equals(paymentsFraudAuthEndpoint, "")){
+                throw new ConfigurationException("Migration mode is enabled but '" + RisConfigurationConstants.PROPERTY_PAYMENTS_FRAUD_AUTH_ENDPOINT + "' is not configured");
+            }
+
+            paymentsFraudClientId = System.getProperty(RisConfigurationConstants.PROPERTY_PAYMENTS_FRAUD_CLIENT_ID, "");
+            if (Objects.equals(paymentsFraudClientId, "")){
+                throw new ConfigurationException("Migration mode is enabled but '" + RisConfigurationConstants.PROPERTY_PAYMENTS_FRAUD_CLIENT_ID + "' is not configured");
+            }
+
+            paymentsFraudApiKey = System.getProperty(RisConfigurationConstants.PROPERTY_PAYMENTS_FRAUD_API_KEY, "");
+            if (Objects.equals(paymentsFraudApiKey, "")){
+                throw new ConfigurationException("Migration mode is enabled but '" + RisConfigurationConstants.PROPERTY_PAYMENTS_FRAUD_API_KEY + "' is not configured");
+            }
+
+            initialized = true;
+        }
+    }
+
+    private static void refreshAuthToken() throws RisTransportException {
+        bearerWriteLock.lock();
+
+        if (bearer.expiresAt.isAfter(OffsetDateTime.now().plusSeconds(60))) {
+            // previous thread updated it already
+            return;
+        }
+
+        try {
+            HttpPost httpPost = new HttpPost(paymentsFraudAuthEndpoint);
+            httpPost.addHeader("Content-Type", "application/x-www-form-urlencoded");
+            httpPost.addHeader(PF_AUTH_HEADER, "Basic " + paymentsFraudApiKey);
+            Map<String, String> params = new HashMap<>();
+            params.put("grant_type", "client_credentials");
+            params.put("scope", "k1_integration_api");
+
+            httpPost.setEntity(new UrlEncodedFormEntity(convertToNameValuePair(params)));
+
+            HttpClient httpClient = HttpClientBuilder
+                    .create()
+                    .setConnectionManager(connManager)
+                    .build();
+
+            try (CloseableHttpResponse httpResponse = (CloseableHttpResponse) httpClient.execute(httpPost);
+                 Reader reader = new InputStreamReader(readAllInput(httpResponse.getEntity()));
+            ) {
+                if (httpResponse.getCode() < 400) {
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    BearerAuthResponse authResponse = new BearerAuthResponse();
+                    //convert json string to object
+                    authResponse = objectMapper.readValue(reader, BearerAuthResponse.class);
+                    if (
+                            !authResponse.createdAt.equals(authResponse.expiresAt) &&
+                                authResponse.expiresAt.isAfter(bearer.expiresAt)
+                    ) {
+                        bearerReadLock.lock();
+                        bearer = authResponse;
+                        bearerReadLock.unlock();
+                    } else {
+                        logger.warn("new auth token expires before existing one, keeping existing one");
+                    }
+
+                } else {
+                    bearerWriteLock.unlock();
+                    String message = "Error fetching auth token: received " + httpResponse.getCode() + " " + httpResponse.getReasonPhrase();
+                    logger.error(message);
+                    throw new RisTransportException("An error occurred while reading the auth token response: " + message);
+                }
+            }
+        } catch (Exception ioe) {
+            bearerWriteLock.unlock();
+            logger.error("Error fetching updating bearer auth token", ioe);
+            throw new RisTransportException("An error occurred while getting the auth token", ioe);
+        }
+        bearerWriteLock.unlock();
+    }
+
     private CloseableHttpClient getHttpClient() {
         if (httpClient == null) {
             synchronized (this) {
-            	httpClient = HttpClients.custom()
-                        .useSystemProperties()
-                        .setConnectionTimeToLive(connectionTimeToLive, TimeUnit.MINUTES)
-                        .setDefaultSocketConfig(SocketConfig.custom()
-                                .setSoTimeout(this.readTimeout)
-                                .build())
-                        .setDefaultRequestConfig(RequestConfig.custom()
-                                .setConnectTimeout(this.connectTimeout)
-                                .setSocketTimeout(this.readTimeout)
-                                .setCookieSpec(CookieSpecs.STANDARD_STRICT)
-                                .build())
+            	httpClient = HttpClientBuilder
+                        .create()
                         .setConnectionManager(connManager)
-                        .setKeepAliveStrategy(getKeepAliveStrategy())
                         .build();
             }
         }
@@ -160,42 +261,7 @@ public class HttpApiTransport extends Transport {
         return httpClient;
     }
 
-	private ConnectionKeepAliveStrategy getKeepAliveStrategy() {
-		// Creating a custom keep alive strategy.
-		// Http 1.1 and higher assumes connection reuse/keep alive is by default supported.
-		// HttpClient 4.x.x assumes if there is no keep-alive header then the server supports indefinite keep-alive
-		// This _may_ have been the cause of connection reset errors reported (example: TRIAGE-1598)
-		// See more information from the random web experts at:
-		//  - https://blog.fearcat.in/a?ID=00001-0b18ac9b-843e-4dd1-bb03-b1fe4416f69a
-		//  - https://www.baeldung.com/httpclient-connection-management
-		// This can likely be removed if clients continue to see issues or after upgrading to HttpClient 5 which does not assume infinite keep-alive
-		
-		ConnectionKeepAliveStrategy keepAliveStrategy = new ConnectionKeepAliveStrategy() {
-			@Override
-			public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
-				// This implementation will attempt to honor the keep alive specified by the server in the Keep-Alive header before selecting a default value
-				HeaderElementIterator it = new BasicHeaderElementIterator(
-						response.headerIterator(HTTP.CONN_KEEP_ALIVE));
-				while (it.hasNext()) {
-					HeaderElement he = it.nextElement();
-					String param = he.getName();
-					String value = he.getValue();
-					if (value != null && param.equalsIgnoreCase("timeout")) {
-						try {
-							return Long.parseLong(value) * 1000;
-						} catch (NumberFormatException ignore) {
-							// Ignore. If we don't have a valid number in the header we will just use the default.
-						}
-					}
-				}
-				return 5000; // 5 seconds * 1000 ms
-			}
-		};
-		return keepAliveStrategy;
-	}
-
-
-    public ByteArrayInputStream readAllIntput(HttpEntity entity) throws IOException {
+    public static ByteArrayInputStream readAllInput(HttpEntity entity) throws IOException {
         try {
             InputStream is = entity.getContent();
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -217,28 +283,37 @@ public class HttpApiTransport extends Transport {
             params.put("PENC", "");
         }     
         try {
+            if (migrationModeEnabled && bearer.expiresAt.isBefore(OffsetDateTime.now().plusSeconds(60))) {
+                refreshAuthToken();
+            }
             long startTime = System.currentTimeMillis();
 
-            HttpPost httpPost = new HttpPost(this.risServerUrl);
+            HttpPost httpPost;
+
+            if(migrationModeEnabled) {
+                httpPost = new HttpPost(paymentsFraudApiEndpoint);
+
+                bearerReadLock.lock();
+                httpPost.addHeader(PF_AUTH_HEADER,  bearer.tokenType + " " + bearer.accessToken);
+                bearerReadLock.unlock();
+
+                params.put("MERC", paymentsFraudClientId); // override merc with client id
+                httpPost.addHeader(CUSTOM_HEADER_MERCHANT_ID, paymentsFraudClientId);
+            } else {
+                httpPost = new HttpPost(this.risServerUrl);
+
+                httpPost.addHeader(CUSTOM_HEADER_API_KEY, this.apiKey);
+                httpPost.addHeader(CUSTOM_HEADER_MERCHANT_ID, params.get("MERC"));
+            }
+
             httpPost.addHeader("Content-Type", "application/x-www-form-urlencoded");
-            httpPost.addHeader(CUSTOM_HEADER_API_KEY, this.apiKey);
-            httpPost.addHeader(CUSTOM_HEADER_MERCHANT_ID, params.get("MERC"));
+
             httpPost.setEntity(new UrlEncodedFormEntity(convertToNameValuePair(params)));
 
             try (CloseableHttpResponse httpResponse = getHttpClient().execute(httpPost);
-            Reader reader = new InputStreamReader(readAllIntput(httpResponse.getEntity()));  
+                 Reader reader = new InputStreamReader(readAllInput(httpResponse.getEntity()));
            )
               {
-                if (logger.isDebugEnabled()) {
-                    long elapsed = (System.currentTimeMillis() - startTime);
-
-                    StringBuilder builder = new StringBuilder();
-                    builder.append("MERC = ").append(params.get("MERC"));
-                    builder.append(" SESS = ").append(params.get("SESS"));
-                    builder.append(" elapsed = ").append(elapsed).append(" ms.");
-
-                    logger.debug(builder.toString());
-                }
                 Response responseObj = parse(reader);
               
                     try {

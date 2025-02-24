@@ -2,14 +2,14 @@ package com.kount.ris.transport;
 
 import com.kount.ris.Response;
 import com.kount.ris.util.RisTransportException;
-import org.apache.http.NameValuePair;
-import org.apache.http.message.BasicNameValuePair;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.Reader;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -100,12 +100,12 @@ public abstract class Transport {
 			String value = params.get(key);
 			out.write(key);
 			out.write('=');
-			out.write(URLEncoder.encode(null == value ? "" : value, "UTF-8"));
+			out.write(URLEncoder.encode(null == value ? "" : value, StandardCharsets.UTF_8));
 			out.write('&');
 		}
 	}
 
-	protected List<NameValuePair> convertToNameValuePair(Map<String, String> params) {
+	protected static List<NameValuePair> convertToNameValuePair(Map<String, String> params) {
 		List<NameValuePair> nvpList = new ArrayList<>(params.size());
 
 		for (Map.Entry<String, String> entry : params.entrySet()) {
