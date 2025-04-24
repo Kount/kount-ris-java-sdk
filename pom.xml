@@ -37,7 +37,7 @@
     <log4j-core.version>2.24.3</log4j-core.version>
     <log4j-api.version>2.24.3</log4j-api.version>
 	<jackson.version>2.18.2</jackson.version>
-	<httpclient5.version>5.4.2</httpclient5.version>
+	<httpclient5.version>5.4.3</httpclient5.version>
 	<httpcomponents.version>5.3.3</httpcomponents.version>
     <junit.version>5.11.4</junit.version>
 	<jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
