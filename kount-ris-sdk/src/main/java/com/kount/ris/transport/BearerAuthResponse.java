@@ -19,9 +19,9 @@ public class BearerAuthResponse {
     @JsonProperty("scope")
     protected String scope = "";
 
-    protected OffsetDateTime createdAt = OffsetDateTime.now();
+    protected OffsetDateTime createdAt = OffsetDateTime.MIN;
 
-    protected OffsetDateTime expiresAt = OffsetDateTime.now();
+    protected OffsetDateTime expiresAt = OffsetDateTime.MIN;
 
     public String getAccessToken() {
         return accessToken;
@@ -32,7 +32,7 @@ public class BearerAuthResponse {
     }
 
     public OffsetDateTime getExpiresAt() {
-        if (createdAt == expiresAt && !Objects.equals(expiresIn, "")) {
+        if (createdAt.equals(expiresAt) && !expiresIn.isEmpty()) {
             expiresAt = createdAt.plusSeconds(Integer.parseInt(expiresIn) - 60); // allow 60 seconds for latency
         }
 
