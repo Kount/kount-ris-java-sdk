@@ -36,7 +36,7 @@ public class Inquiry extends Request {
 	 * Set cash amount of any feasible goods.
 	 * 
 	 * @param cash
-	 *            int Cash amount of any feasible goods
+	 *            long Cash amount of any feasible goods
 	 * @return this
 	 */
 	public Inquiry setCash(long cash) {
