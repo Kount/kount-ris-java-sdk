@@ -194,7 +194,7 @@ public class HttpApiTransport extends Transport {
     private static void refreshAuthToken() throws RisTransportException {
         bearerWriteLock.lock();
 
-        if (bearer.expiresAt.isAfter(OffsetDateTime.now().plusSeconds(60))) {
+        if (bearer.getExpiresAt().isAfter(OffsetDateTime.now().plusSeconds(60))) {
             // previous thread updated it already
             return;
         }
@@ -224,7 +224,7 @@ public class HttpApiTransport extends Transport {
                     authResponse = objectMapper.readValue(reader, BearerAuthResponse.class);
                     if (
                             !authResponse.createdAt.equals(authResponse.expiresAt) &&
-                                authResponse.expiresAt.isAfter(bearer.expiresAt)
+                                authResponse.getExpiresAt().isAfter(bearer.expiresAt)
                     ) {
                         bearerReadLock.lock();
                         bearer = authResponse;
