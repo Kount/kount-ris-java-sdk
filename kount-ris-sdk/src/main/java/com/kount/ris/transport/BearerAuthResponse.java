@@ -32,7 +32,7 @@ public class BearerAuthResponse {
     }
 
     public OffsetDateTime getExpiresAt() {
-        if (createdAt.equals(expiresAt) && !expiresIn.isEmpty()) {
+        if (!createdAt.equals(expiresAt)) {
             expiresAt = createdAt.plusSeconds(Integer.parseInt(expiresIn) - 60); // allow 60 seconds for latency
         }
 
