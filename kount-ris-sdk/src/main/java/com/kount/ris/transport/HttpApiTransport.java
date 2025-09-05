@@ -222,16 +222,9 @@ public class HttpApiTransport extends Transport {
                     BearerAuthResponse authResponse = new BearerAuthResponse();
                     //convert json string to object
                     authResponse = objectMapper.readValue(reader, BearerAuthResponse.class);
-                    if (
-                            !authResponse.createdAt.equals(authResponse.expiresAt) &&
-                                authResponse.getExpiresAt().isAfter(bearer.expiresAt)
-                    ) {
-                        bearerReadLock.lock();
-                        bearer = authResponse;
-                        bearerReadLock.unlock();
-                    } else {
-                        logger.warn("new auth token expires before existing one, keeping existing one");
-                    }
+                    bearerReadLock.lock();
+                    bearer = authResponse;
+                    bearerReadLock.unlock();
 
                 } else {
                     bearerWriteLock.unlock();
