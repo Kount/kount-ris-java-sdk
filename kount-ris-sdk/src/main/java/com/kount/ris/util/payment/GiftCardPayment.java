@@ -7,7 +7,7 @@ package com.kount.ris.util.payment;
  * 
  * @author Kount &lt;custserv@kount.com&gt;
  * @version $Id$
- * @copyright 2011 Kount Inc. All Rights Reverved.
+ * @copyright 2025 Equifax All Rights Reserved.
  */
 public class GiftCardPayment extends Payment {
 

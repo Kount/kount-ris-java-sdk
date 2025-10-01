@@ -2,10 +2,8 @@ package com.kount.ris.transport;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kount.ris.Response;
-import com.kount.ris.RisConfigurationConstants;
 import com.kount.ris.util.RisResponseException;
 import com.kount.ris.util.RisTransportException;
-import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
@@ -30,9 +28,10 @@ import java.net.URL;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 
 
 /**
@@ -44,16 +43,25 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  *
  * @author Kount &lt;custserv@kount.com&gt;
  * @version $Id$
- * @copyright 2010 Keynetics Inc
+ * @copyright 2025 Equifax
  */
 public class HttpApiTransport extends Transport {
-
     public static final int DEFAULT_MAX_CONNECTIONS = 256;
     public static final int DEFAULT_CONNECTION_IDLE_TIMEOUT_MINUTES = 1;
     public static final int DEFAULT_CONNECTION_TIMEOUT_MS = 10000;
     public static final int DEFAULT_SOCKET_TIMEOUT_MS = 10000;
     public static final String CUSTOM_HEADER_MERCHANT_ID = "X-Kount-Merc-Id";
     public static final String CUSTOM_HEADER_API_KEY = "X-Kount-Api-Key";
+    protected static final Lock connManagerWriteLock = new ReentrantLock();
+    protected boolean migrationModeEnabled = false;
+    protected String paymentsFraudApiEndpoint = "https://api.kount.com/commerce/ris";
+    protected String paymentsFraudAuthEndpoint = "https://login.kount.com/oauth2/ausdppksgrbyM0abp357/v1/token";
+    protected String paymentsFraudClientId = "";
+    protected String paymentsFraudApiKey = "";
+    protected BearerAuthResponse bearer = new BearerAuthResponse();
+    protected static final ReentrantReadWriteLock bearerRWLock = new ReentrantReadWriteLock();
+    protected static final Lock bearerReadLock = bearerRWLock.readLock();
+    protected static final Lock bearerWriteLock = bearerRWLock.writeLock();
     public static final String PF_AUTH_HEADER = "Authorization";
 
     /**
@@ -75,27 +83,18 @@ public class HttpApiTransport extends Transport {
             .build();
 
     static {
+        connManagerWriteLock.lock();
         connManager.setMaxTotal(DEFAULT_MAX_CONNECTIONS);
         connManager.setDefaultMaxPerRoute(DEFAULT_MAX_CONNECTIONS);
+        connManagerWriteLock.unlock();
     }
 
     /**
-     * Cache the api key (minimize file reads to once per instatiation).
+     * Cache the api key (minimize file reads to once per instantiation).
      */
     protected String apiKey;
 
     private CloseableHttpClient httpClient;
-
-    private static boolean migrationModeEnabled = false;
-    private static boolean initialized = false;
-    private static String paymentsFraudApiEndpoint = "";
-    private static String paymentsFraudAuthEndpoint = "";
-    private static String paymentsFraudClientId = "";
-    private static String paymentsFraudApiKey = "";
-    private static BearerAuthResponse bearer = new BearerAuthResponse();
-    private static final ReentrantReadWriteLock bearerRWLock = new ReentrantReadWriteLock();
-    private static final Lock bearerReadLock = bearerRWLock.readLock();
-    private static final Lock bearerWriteLock = bearerRWLock.writeLock();
 
     /**
      * Connection Time To Live
@@ -105,11 +104,10 @@ public class HttpApiTransport extends Transport {
     /**
      * Default transport constructor.
      */
-    public HttpApiTransport() throws ConfigurationException {
+    public HttpApiTransport() {
         connectTimeout = DEFAULT_CONNECTION_TIMEOUT_MS;
         readTimeout = DEFAULT_SOCKET_TIMEOUT_MS;
         connectionTimeToLive = DEFAULT_CONNECTION_IDLE_TIMEOUT_MINUTES;
-        checkMigrationMode();
     }
 
     /**
@@ -118,11 +116,22 @@ public class HttpApiTransport extends Transport {
      * @param url RIS server url.
      * @param key API key.
      */
-    public HttpApiTransport(URL url, String key) throws ConfigurationException {
+    public HttpApiTransport(URL url, String key) {
         this();
-        setRisServerUrl(url.toString());
-        setApiKey(key);
-        checkMigrationMode();
+        this.risServerUrl = url.toString();
+        this.apiKey = key;
+    }
+
+    /**
+     * Constructor that accepts a RIS url and an api key as input.
+     *
+     * @param url RIS server url.
+     * @param key API key.
+     */
+    public HttpApiTransport(URL url, String key, boolean migrationModeEnabled, String paymentsFraudApiKey, String paymentsFraudClientId, String paymentsFraudApiEndpoint, String paymentsFraudAuthEndpoint) throws ConfigurationException {
+        this(url, key);
+        configureMigrationMode(migrationModeEnabled, paymentsFraudApiKey, paymentsFraudClientId, paymentsFraudApiEndpoint, paymentsFraudAuthEndpoint);
+
     }
 
     /**
@@ -133,13 +142,28 @@ public class HttpApiTransport extends Transport {
      * @param maxConnections         connection Pool Threads.
      * @param maxConnectionsPerRoute connection Per Route.
      */
-    public HttpApiTransport(URL url, String key, int maxConnections, int maxConnectionsPerRoute) throws ConfigurationException {
+    public HttpApiTransport(URL url, String key, int maxConnections, int maxConnectionsPerRoute) {
         this();
-        setRisServerUrl(url.toString());
-        setApiKey(key);
+        this.risServerUrl = url.toString();
+        this.apiKey = key;
+
+        connManagerWriteLock.lock();
         connManager.setMaxTotal(maxConnections);
         connManager.setDefaultMaxPerRoute(maxConnectionsPerRoute);
-        checkMigrationMode();
+        connManagerWriteLock.unlock();
+    }
+
+    /**
+     * Constructor that accepts a RIS url and an api key as input.
+     *
+     * @param url                    RIS server url.
+     * @param key                    API key.
+     * @param maxConnections         connection Pool Threads.
+     * @param maxConnectionsPerRoute connection Per Route.
+     */
+    public HttpApiTransport(URL url, String key, int maxConnections, int maxConnectionsPerRoute, boolean migrationModeEnabled, String paymentsFraudApiKey, String paymentsFraudClientId, String paymentsFraudApiEndpoint, String paymentsFraudAuthEndpoint) throws ConfigurationException {
+        this(url, key, maxConnections, maxConnectionsPerRoute);
+        configureMigrationMode(migrationModeEnabled, paymentsFraudApiKey, paymentsFraudClientId, paymentsFraudApiEndpoint, paymentsFraudAuthEndpoint);
     }
 
     /**
@@ -161,90 +185,10 @@ public class HttpApiTransport extends Transport {
         connectionTimeToLive = minutes;
     }
 
-    private void checkMigrationMode() throws ConfigurationException {
-        String migrationModeStr = System.getProperty(RisConfigurationConstants.PROPERTY_MIGRATION_MODE_ENABLED, "false");
-        migrationModeEnabled = Boolean.parseBoolean(migrationModeStr);
-
-        if (migrationModeEnabled && !initialized) {
-
-            paymentsFraudApiEndpoint = System.getProperty(RisConfigurationConstants.PROPERTY_PAYMENTS_FRAUD_API_ENDPOINT, "");
-            if (Objects.equals(paymentsFraudApiEndpoint, "")){
-                throw new ConfigurationException("Migration mode is enabled but '" + RisConfigurationConstants.PROPERTY_PAYMENTS_FRAUD_API_ENDPOINT + "' is not configured");
-            }
-
-            paymentsFraudAuthEndpoint = System.getProperty(RisConfigurationConstants.PROPERTY_PAYMENTS_FRAUD_AUTH_ENDPOINT, "");
-            if (Objects.equals(paymentsFraudAuthEndpoint, "")){
-                throw new ConfigurationException("Migration mode is enabled but '" + RisConfigurationConstants.PROPERTY_PAYMENTS_FRAUD_AUTH_ENDPOINT + "' is not configured");
-            }
-
-            paymentsFraudClientId = System.getProperty(RisConfigurationConstants.PROPERTY_PAYMENTS_FRAUD_CLIENT_ID, "");
-            if (Objects.equals(paymentsFraudClientId, "")){
-                throw new ConfigurationException("Migration mode is enabled but '" + RisConfigurationConstants.PROPERTY_PAYMENTS_FRAUD_CLIENT_ID + "' is not configured");
-            }
-
-            paymentsFraudApiKey = System.getProperty(RisConfigurationConstants.PROPERTY_PAYMENTS_FRAUD_API_KEY, "");
-            if (Objects.equals(paymentsFraudApiKey, "")){
-                throw new ConfigurationException("Migration mode is enabled but '" + RisConfigurationConstants.PROPERTY_PAYMENTS_FRAUD_API_KEY + "' is not configured");
-            }
-
-            initialized = true;
-        }
-    }
-
-    private static void refreshAuthToken() throws RisTransportException {
-        bearerWriteLock.lock();
-
-        if (bearer.getExpiresAt().isAfter(OffsetDateTime.now().plusSeconds(60))) {
-            // previous thread updated it already
-            return;
-        }
-
-        try {
-            HttpPost httpPost = new HttpPost(paymentsFraudAuthEndpoint);
-            httpPost.addHeader("Content-Type", "application/x-www-form-urlencoded");
-            httpPost.addHeader(PF_AUTH_HEADER, "Basic " + paymentsFraudApiKey);
-            Map<String, String> params = new HashMap<>();
-            params.put("grant_type", "client_credentials");
-            params.put("scope", "k1_integration_api");
-
-            httpPost.setEntity(new UrlEncodedFormEntity(convertToNameValuePair(params)));
-
-            HttpClient httpClient = HttpClientBuilder
-                    .create()
-                    .setConnectionManager(connManager)
-                    .build();
-
-            try (CloseableHttpResponse httpResponse = (CloseableHttpResponse) httpClient.execute(httpPost);
-                 Reader reader = new InputStreamReader(readAllInput(httpResponse.getEntity()));
-            ) {
-                if (httpResponse.getCode() < 400) {
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    BearerAuthResponse authResponse = new BearerAuthResponse();
-                    //convert json string to object
-                    authResponse = objectMapper.readValue(reader, BearerAuthResponse.class);
-                    bearerReadLock.lock();
-                    bearer = authResponse;
-                    bearerReadLock.unlock();
-
-                } else {
-                    bearerWriteLock.unlock();
-                    String message = "Error fetching auth token: received " + httpResponse.getCode() + " " + httpResponse.getReasonPhrase();
-                    logger.error(message);
-                    throw new RisTransportException("An error occurred while reading the auth token response: " + message);
-                }
-            }
-        } catch (Exception ioe) {
-            bearerWriteLock.unlock();
-            logger.error("Error fetching updating bearer auth token", ioe);
-            throw new RisTransportException("An error occurred while getting the auth token", ioe);
-        }
-        bearerWriteLock.unlock();
-    }
-
     private CloseableHttpClient getHttpClient() {
         if (httpClient == null) {
             synchronized (this) {
-            	httpClient = HttpClientBuilder
+                httpClient = HttpClientBuilder
                         .create()
                         .setConnectionManager(connManager)
                         .build();
@@ -271,27 +215,30 @@ public class HttpApiTransport extends Transport {
         }
     }
 
-    public Response sendResponse(Map<String, String> params) throws RisTransportException {
+    public Response sendRequest(Map<String, String> params) throws RisTransportException {
         if (!params.containsKey("PTOK") || ("KHASH".equals(params.get("PENC")) && null == params.get("PTOK"))) {
             params.put("PENC", "");
-        }     
+        }
         try {
             if (migrationModeEnabled && bearer.expiresAt.isBefore(OffsetDateTime.now().plusSeconds(60))) {
-                refreshAuthToken();
+                this.refreshAuthToken();
             }
-            long startTime = System.currentTimeMillis();
 
             HttpPost httpPost;
 
-            if(migrationModeEnabled) {
+            if (migrationModeEnabled) {
                 httpPost = new HttpPost(paymentsFraudApiEndpoint);
 
                 bearerReadLock.lock();
-                httpPost.addHeader(PF_AUTH_HEADER,  bearer.tokenType + " " + bearer.accessToken);
-                bearerReadLock.unlock();
+                try {
+                    httpPost.addHeader(PF_AUTH_HEADER, bearer.tokenType + " " + bearer.accessToken);
+                } finally {
+                    bearerReadLock.unlock();
+                }
 
-                params.put("MERC", paymentsFraudClientId); // override merc with client id
-                httpPost.addHeader(CUSTOM_HEADER_MERCHANT_ID, paymentsFraudClientId);
+                String clientId = this.paymentsFraudClientId;
+                params.put("MERC", clientId); // override merc with client id
+                httpPost.addHeader(CUSTOM_HEADER_MERCHANT_ID, clientId);
             } else {
                 httpPost = new HttpPost(this.risServerUrl);
 
@@ -304,20 +251,11 @@ public class HttpApiTransport extends Transport {
             httpPost.setEntity(new UrlEncodedFormEntity(convertToNameValuePair(params)));
 
             try (CloseableHttpResponse httpResponse = getHttpClient().execute(httpPost);
-                 Reader reader = new InputStreamReader(readAllInput(httpResponse.getEntity()));
-           )
-              {
-                Response responseObj = parse(reader);
-              
-                    try {
-                        reader.close();
-                    } catch (IOException e) {
-                        throw new RisTransportException("Error closing reader", e);
-                    }
-                
-                return responseObj;  
-            }  
-           
+                 Reader reader = new InputStreamReader(readAllInput(httpResponse.getEntity()))
+            ) {
+                return parse(reader);
+            }
+
         } catch (Exception ioe) {
             logger.error("Error fetching RIS response", ioe);
             throw new RisTransportException("An error occurred while getting the RIS response", ioe);
@@ -325,7 +263,82 @@ public class HttpApiTransport extends Transport {
     }
 
     protected Response parse(Reader r) throws RisResponseException {
-		logger.trace("parse()");
-		return Response.parseResponse(r);
-	}
+        logger.trace("parse()");
+        return Response.parseResponse(r);
+    }
+
+    protected void configureMigrationMode(boolean migrationModeEnabled, String paymentsFraudApiKey, String paymentsFraudClientId, String paymentsFraudApiEndpoint, String paymentsFraudAuthEndpoint) throws ConfigurationException {
+        this.migrationModeEnabled = migrationModeEnabled;
+        this.paymentsFraudApiKey = paymentsFraudApiKey;
+        this.paymentsFraudClientId = paymentsFraudClientId;
+        this.paymentsFraudApiEndpoint = paymentsFraudApiEndpoint;
+        this.paymentsFraudAuthEndpoint = paymentsFraudAuthEndpoint;
+
+
+        if (migrationModeEnabled) {
+            if (this.paymentsFraudApiKey.isEmpty()) {
+                throw new ConfigurationException("migration mode is set to enabled, but Payments Fraud API key is missing");
+            }
+            if (this.paymentsFraudClientId.isEmpty()) {
+                throw new ConfigurationException("migration mode is set to enabled, but Payments Fraud Client ID is missing");
+            }
+            if (this.paymentsFraudApiEndpoint.isEmpty()) {
+                throw new ConfigurationException("migration mode is set to enabled, but Payments Fraud API endpoint is missing");
+            }
+            if (this.paymentsFraudAuthEndpoint.isEmpty()) {
+                throw new ConfigurationException("migration mode is set to enabled, but Payments Fraud Auth endpoint is missing");
+            }
+        }
+    }
+
+    protected void refreshAuthToken() throws RisTransportException {
+        bearerWriteLock.lock();
+
+        if (bearer.getExpiresAt().isAfter(OffsetDateTime.now().plusSeconds(60))) {
+            // previous thread updated it already
+            return;
+        }
+
+        try {
+            HttpPost httpPost = new HttpPost(paymentsFraudAuthEndpoint);
+            httpPost.addHeader("Content-Type", "application/x-www-form-urlencoded");
+            httpPost.addHeader(PF_AUTH_HEADER, "Basic " + paymentsFraudApiKey);
+            Map<String, String> params = new HashMap<>();
+            params.put("grant_type", "client_credentials");
+            params.put("scope", "k1_integration_api");
+
+            httpPost.setEntity(new UrlEncodedFormEntity(convertToNameValuePair(params)));
+
+            try (CloseableHttpClient httpClient = HttpClientBuilder
+                    .create()
+                    .build()) {
+
+                try (CloseableHttpResponse httpResponse = httpClient.execute(httpPost);
+                     Reader reader = new InputStreamReader(readAllInput(httpResponse.getEntity()))
+                ) {
+                    if (httpResponse.getCode() < 400) {
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        BearerAuthResponse authResponse;
+                        //convert json string to object
+                        authResponse = objectMapper.readValue(reader, BearerAuthResponse.class);
+                        bearerReadLock.lock();
+                        bearer = authResponse;
+                        bearerReadLock.unlock();
+
+                    } else {
+                        bearerWriteLock.unlock();
+                        String message = "Error fetching auth token: received " + httpResponse.getCode() + " " + httpResponse.getReasonPhrase();
+                        logger.error(message);
+                        throw new RisTransportException("An error occurred while reading the auth token response: " + message);
+                    }
+                }
+            } catch (Exception ioe) {
+                bearerWriteLock.unlock();
+                logger.error("Error fetching updating bearer auth token", ioe);
+                throw new RisTransportException("An error occurred while getting the auth token", ioe);
+            }
+        } finally {
+            bearerWriteLock.unlock();
+        }
+    }
 }

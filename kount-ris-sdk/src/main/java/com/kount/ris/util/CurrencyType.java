@@ -5,9 +5,9 @@ package com.kount.ris.util;
  * 
  * @author Kount &lt;custserv@kount.com&gt;
  * @version $Id$
- * @copyright 2010 Keynetics Inc
+ * @copyright 2025 Equifax
  * 
- * @deprecated Use three-character ISO-4217 currency code.
+ * @Deprecated Use three-character ISO-4217 currency code.
  */
 public final class CurrencyType extends Enum {
 
@@ -37,7 +37,7 @@ public final class CurrencyType extends Enum {
 	public static final CurrencyType CAD = new CurrencyType("CAD");
 
 	/**
-	 * Austrailian Dollar.
+	 * Australian Dollar.
 	 */
 	public static final CurrencyType AUD = new CurrencyType("AUD");
 

@@ -1,10 +1,9 @@
 package com.kount.ris.khash;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
+import com.kount.ris.util.Khash;
 import org.junit.jupiter.api.Test;
 
-import com.kount.ris.util.Khash;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class KhashFunctionalityTest {
 

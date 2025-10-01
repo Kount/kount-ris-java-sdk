@@ -1,18 +1,19 @@
 package com.kount.ris.khash;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import org.junit.jupiter.api.Test;
-
 import com.kount.ris.Inquiry;
 import com.kount.ris.util.payment.CarteBleuePayment;
 import com.kount.ris.util.payment.SkrillMoneybookersPayment;
 import com.kount.ris.util.payment.TokenPayment;
+import org.junit.jupiter.api.Test;
+
+import java.io.UnsupportedEncodingException;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class PaymentTypesKhashingTest {
 
 	@Test
-	public void testTokenKhashing() {
+	public void testTokenKhashing() throws UnsupportedEncodingException {
 		Inquiry inq = new Inquiry();
 		
 		inq.setPayment(new TokenPayment("6011476613608633"));
@@ -29,7 +30,7 @@ public class PaymentTypesKhashingTest {
 	}
 
 	@Test
-	public void testCarteBleueKhashing() {
+	public void testCarteBleueKhashing() throws UnsupportedEncodingException {
 		Inquiry inq = new Inquiry();
 		inq.setPayment(new CarteBleuePayment("AABBCC661360DDD"));
 		
@@ -39,7 +40,7 @@ public class PaymentTypesKhashingTest {
 	}
 	
 	@Test
-	public void testSkrillKhashing() {
+	public void testSkrillKhashing() throws UnsupportedEncodingException {
 		Inquiry inq = new Inquiry();
 		inq.setPayment(new SkrillMoneybookersPayment("XYZ123661360SKMB"));
 		

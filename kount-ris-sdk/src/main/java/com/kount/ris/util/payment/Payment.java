@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger;
  * 
  * @author Kount &lt;custserv@kount.com&gt;
  * @version $Id$
- * @copyright 2010 Keynetics Inc
+ * @copyright 2025 Equifax
  */
 public class Payment {
 
@@ -53,14 +53,14 @@ public class Payment {
 	public Payment(String ptyp, String ptok) {
 		this.paymentType = ptyp;
 		this.paymentToken = ptok;
-		this.setKhashed(false);
+		this.khashed = false;
 	}
 
 	/**
 	 * Get the payment ID.
 	 * 
 	 * @return Payment ID
-	 * @deprecated Version 5.0.0 - 2012. Use method
+	 * @Deprecated Version 5.0.0 - 2012. Use method
 	 *             com.kount.ris.util.payment.Payment.getPaymentToken() :
 	 *             String.
 	 */

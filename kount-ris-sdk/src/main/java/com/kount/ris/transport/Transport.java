@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +21,7 @@ import java.util.Map;
  * 
  * @author Kount &lt;custserv@kount.com&gt;
  * @version $Id$
- * @copyright 2010 Keynetics Inc
+ * @copyright 2025 Equifax
  */
 public abstract class Transport {
 
@@ -33,10 +32,10 @@ public abstract class Transport {
 	 * Send transaction data to RIS.
 	 * 
 	 * @throws RisTransportException RIS transport exception
-	 * @param params Map of data to send
+	 * @param params parameters to send
 	 * @return Reader for character stream returned by RIS
 	 */
-	public abstract Response sendResponse(Map<String, String> params) throws RisTransportException;
+	public abstract Response sendRequest(Map<String, String> params) throws RisTransportException;
 
 	/**
 	 * Ris server endpoint url.
@@ -65,7 +64,7 @@ public abstract class Transport {
 	}
 
 	/**
-	 * Set the transports connection timeout. See http://docs.oracle.com/javase/7
+	 * Set the transports connection timeout. See https://docs.oracle.com/javase/7
 	 * /docs/api/java/net/URLConnection.html#setConnectTimeout(int)
 	 * 
 	 * @param timeout Timeout in milliseconds
@@ -75,7 +74,7 @@ public abstract class Transport {
 	}
 
 	/**
-	 * Set the transports connection read timeout. http://docs.oracle.com/javase/
+	 * Set the transports connection read timeout. https://docs.oracle.com/javase/
 	 * 7/docs/api/java/net/URLConnection.html#setReadTimeout(int)
 	 * 
 	 * @param timeout Timeout in milliseconds
@@ -90,9 +89,9 @@ public abstract class Transport {
 	 * </p>
 	 * All values are URL-encoded with UTF-8.
 	 * 
-	 * @param out
-	 * @param params
-	 * @throws IOException
+	 * @param out OutputStreamWriter
+	 * @param params params in use
+	 * @throws IOException failed to encode
 	 */
 	protected static void writeParametersToOutput(OutputStreamWriter out, Map<String, String> params)
 			throws IOException {
@@ -100,12 +99,12 @@ public abstract class Transport {
 			String value = params.get(key);
 			out.write(key);
 			out.write('=');
-			out.write(URLEncoder.encode(null == value ? "" : value, StandardCharsets.UTF_8));
+			out.write(URLEncoder.encode(null == value ? "" : value, "UTF-8"));
 			out.write('&');
 		}
 	}
 
-	protected static List<NameValuePair> convertToNameValuePair(Map<String, String> params) {
+	public static List<NameValuePair> convertToNameValuePair(Map<String, String> params) {
 		List<NameValuePair> nvpList = new ArrayList<>(params.size());
 
 		for (Map.Entry<String, String> entry : params.entrySet()) {

@@ -1,14 +1,14 @@
 package com.kount.ris;
 
-import java.net.URL;
-
+import com.kount.ris.util.RisException;
+import com.kount.ris.util.TestConfiguration;
+import com.kount.ris.util.Utilities;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
 
-import com.kount.ris.util.RisException;
-import com.kount.ris.util.TestConfiguration;
-import com.kount.ris.util.Utilities;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,28 +26,18 @@ public class BasicConnectivityTest {
 	}
 
 	@Test
-	public void testExpectedScore() throws RisException {
-		if(!isPointingToCommand()){
-			return;
-		}
+	public void testExpectedScore() throws RisException, UnsupportedEncodingException {
 		logger.debug("running get expected score test");
 		
 		Inquiry inq = getInquiry(merchantId);
 		inq.setParm("UDF[~K!_SCOR]", "42");
-
-		System.out.println("GMONEY");
-		System.out.println(client.toString());
-
 		Response response = client.process(inq);
 		logger.trace(response.toString());
 		assertEquals("42", response.getScore());
 	}
 
 	@Test
-	public void testExpectedDecision() throws RisException {
-		if(!isPointingToCommand()){
-			return;
-		}
+	public void testExpectedDecision() throws RisException, UnsupportedEncodingException {
 		logger.debug("running get expected decision test");
 		
 		Inquiry inq = getInquiry(merchantId);
@@ -61,11 +51,8 @@ public class BasicConnectivityTest {
 	}
 
 	@Test
-	public void testTotalAndCashWithLongType() throws RisException {
-		if(!isPointingToCommand()){
-			return;
-		}
-		logger.debug("running get expected score test");
+	public void testTotalAndCashWithLongType() throws RisException, UnsupportedEncodingException {
+		logger.debug("running total and cash with long type test");
 		long total = 11111111111111L;
 		long cash = 111111111111111L;
 		Inquiry inq = getInquiry(merchantId);
@@ -78,10 +65,7 @@ public class BasicConnectivityTest {
 	}
 
 	@Test
-	public void testPreviouslyWhiteListedExistWithRisCallVersion_0710() throws RisException {
-		if(!isPointingToCommand()){
-			return;
-		}
+	public void testPreviouslyWhiteListedExistWithRisCallVersion_0710() throws RisException, UnsupportedEncodingException {
 		logger.debug("running get previously white listed test");
 		Inquiry inq = getInquiry(merchantId);
 		inq.setVersion("0710");
@@ -91,10 +75,7 @@ public class BasicConnectivityTest {
 	}
 
 	@Test
-	public void test3dSecureMerchantResponseExistWithRisCallVersion_0710() throws RisException {
-		if(!isPointingToCommand()){
-			return;
-		}
+	public void test3dSecureMerchantResponseExistWithRisCallVersion_0710() throws RisException, UnsupportedEncodingException {
 		logger.debug("running get 3D secure merchant response test");
 		Inquiry inq = getInquiry(merchantId);
 		inq.setVersion("0710");
@@ -104,10 +85,7 @@ public class BasicConnectivityTest {
 	}
 
 	@Test
-	public void testDefaultRisCallVersion() throws RisException {
-		if(!isPointingToCommand()){
-			return;
-		}
+	public void testDefaultRisCallVersion() throws RisException, UnsupportedEncodingException {
 		logger.debug("running default ris call version test");
 		Inquiry inq = getInquiry(merchantId);
 		Response response = client.process(inq);
@@ -117,10 +95,7 @@ public class BasicConnectivityTest {
 	}
 
 	@Test
-	public void testRequstWithLbin() throws RisException {
-		if(!isPointingToCommand()){
-			return;
-		}
+	public void testRequstWithLbin() throws RisException, UnsupportedEncodingException {
 		logger.debug("creating RIS request with LBIN parameter");
 		Inquiry inq = getInquiry(merchantId);
 		inq.setLbin("12345123");
@@ -130,10 +105,7 @@ public class BasicConnectivityTest {
 	}
 
 	@Test
-	public void testRequestWithoutLbin() throws RisException {
-		if(!isPointingToCommand()){
-			return;
-		}
+	public void testRequestWithoutLbin() throws RisException, UnsupportedEncodingException {
 		logger.debug("creating RIS request without LBIN parameter ");		
 		Inquiry inq = getInquiry(merchantId);
         assertFalse(inq.getParams().containsKey("LBIN"));
@@ -141,17 +113,11 @@ public class BasicConnectivityTest {
 		assertEquals(0, response.getErrorCount());
 	}
 
-	private static Inquiry getInquiry(long merchantId) {
+	private static Inquiry getInquiry(long merchantId) throws UnsupportedEncodingException {
 		Inquiry inq = Utilities.defaultInquiry(Utilities.generateUniqueId(), 0);
 		inq.setMerchantId(merchantId);
 		inq.setEmail("predictive@kount.com");
 		
 		return inq;
-	}
-
-	private static boolean isPointingToCommand() {
-		String migrationMode = System.getProperty("migration.mode.enabled");
-		boolean migrationModeEnabled = Boolean.parseBoolean(migrationMode);
-		return !migrationModeEnabled;
 	}
 }

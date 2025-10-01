@@ -1,23 +1,22 @@
 package com.kount.ris.util;
 
-import java.nio.charset.StandardCharsets;
+import com.github.fzakaria.ascii85.Ascii85;
+import com.kount.ris.RisConfigurationConstants;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
 import java.util.Scanner;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import com.github.fzakaria.ascii85.Ascii85;
-import com.kount.ris.RisConfigurationConstants;
 
 /**
  * Class for creating Kount RIS KHASH encoding payment tokens.
  *
  * @author Kount &lt;custserv@kount.com&gt;
  * @version $Id$
- * @copyright 2011 Kount Inc. All Rights Reserved.
+ * @copyright 2025 Equifax All Rights Reserved.
  */
 public final class Khash {
 
@@ -38,7 +37,7 @@ public final class Khash {
 	 * @throws RuntimeException A {@link RuntimeException} is thrown if <code>kount.config.key</code>
 	 * 			system variable has not been set.
 	 */
-	public static Khash getInstance() throws RuntimeException {
+	public static Khash getInstance() throws RuntimeException, UnsupportedEncodingException {
 		if (INSTANCE == null) {
 			INSTANCE = new Khash();
 		}
@@ -50,14 +49,14 @@ public final class Khash {
 	 * The Khash class default constructor. Uses <code>System.getProperty</code> to initialize
 	 * the configuration key that is used for hashing operations.
 	 */
-	private Khash() throws RuntimeException {
+	private Khash() throws RuntimeException, UnsupportedEncodingException {
 		configurationKey = System.getProperty(RisConfigurationConstants.PROPERTY_RIS_CONFIG_KEY, null); 
 		if (configurationKey == null || configurationKey.isEmpty()) {
 			logger.error("No configuration key set at 'kount.config.key' system variable");
 			throw new RuntimeException("No configuration key set");
 		}
 		
-		configurationKey = new String(Ascii85.decode(configurationKey), StandardCharsets.UTF_8);
+		configurationKey = new String(Ascii85.decode(configurationKey), "UTF-8");
 		
 		try {
 			String crypted = readCryptedConfigurationKey();
@@ -71,20 +70,20 @@ public final class Khash {
 			logger.error("Could not verify the configuration key", nsae);
 			throw new IllegalStateException("Could not verify the configuration key");
 		}
-	}
+    }
 	
-	public static String sha256(String plain) throws NoSuchAlgorithmException {
+	public static String sha256(String plain) throws NoSuchAlgorithmException, UnsupportedEncodingException {
 		MessageDigest d = MessageDigest.getInstance("sha-256");
-		byte[] digest = d.digest(plain.getBytes(StandardCharsets.UTF_8));
+		byte[] digest = d.digest(plain.getBytes("UTF-8"));
 
 		StringBuffer hexString = new StringBuffer();
-		for (int i = 0; i < digest.length; i++) {
-			String hex = Integer.toHexString(0xff & digest[i]);
-			if (hex.length() == 1) {
-				hexString.append('0');
-			}
-			hexString.append(hex);
-		}
+        for (byte b : digest) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
 		
 		return hexString.toString();
 	}
@@ -92,7 +91,7 @@ public final class Khash {
 	private static String readCryptedConfigurationKey() {
 		try (Scanner scanner = 
 			new Scanner(Objects.requireNonNull(Khash.class.getClassLoader()
-                    .getResourceAsStream("configuration.key.crypt")), StandardCharsets.UTF_8)) {
+                    .getResourceAsStream("configuration.key.crypt")), "UTF-8")) {
 
             return scanner.nextLine();
 		}
@@ -168,13 +167,13 @@ public final class Khash {
 		md.update(plainText.getBytes());
 		byte[] b = md.digest();
 		StringBuilder sb = new StringBuilder(b.length * 2);
-		for (int i = 0; i < b.length; i++) {
-			int v = b[i] & 0xff;
-			if (v < 16) {
-				sb.append('0');
-			}
-			sb.append(Integer.toHexString(v));
-		}
+        for (byte value : b) {
+            int v = value & 0xff;
+            if (v < 16) {
+                sb.append('0');
+            }
+            sb.append(Integer.toHexString(v));
+        }
 		return sb.toString().toUpperCase();
 	}
 

@@ -1,5 +1,10 @@
 package com.kount.ris;
 
+import com.kount.ris.util.KcEvent;
+import com.kount.ris.util.RisResponseException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -8,18 +13,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import com.kount.ris.util.KcEvent;
-import com.kount.ris.util.RisResponseException;
-
 /**
  * RIS response data class.
  * 
  * @author Kount &lt;custserv@kount.com&gt;
  * @version $Id$
- * @copyright 2010 Keynetics Inc
+ * @copyright 2025 Equifax
  */
 public class Response {
 
@@ -130,7 +129,7 @@ public class Response {
 	 * Get the RIS reason for the response.
 	 * 
 	 * @return Reason
-	 * @deprecated Version 5.0.0 Use method
+	 * @Deprecated Version 5.0.0 Use method
 	 *             com.kount.ris.Response.getReasonCode() : String.
 	 */
 	public String getReason() {
@@ -720,7 +719,7 @@ public class Response {
 	public Map<String, String> getRulesTriggered() {
 		Map<String, String> rules = new HashMap<>();
 		int rulesTriggeredCount = this.getNumberRulesTriggered();
-		String ruleId = null;
+		String ruleId;
 		for (int i = 0; i < rulesTriggeredCount; i++) {
 			ruleId = this.params.get("RULE_ID_" + i);
 			rules.put(ruleId, this.params.get("RULE_DESCRIPTION_" + i));
@@ -806,7 +805,7 @@ public class Response {
 	}
 
 	/**
-	 * Parse the RIS repsonse and return a Response object.
+	 * Parse the RIS response and return a Response object.
 	 * 
 	 * @throws RisResponseException
 	 *             When error encountered parsing response
@@ -817,7 +816,7 @@ public class Response {
 	public static Response parseResponse(Reader r) throws RisResponseException {
 		BufferedReader reader = new BufferedReader(r);
 		Map<String, String> responseFields = new HashMap<>();
-		String line = null;
+		String line;
 		try {
 			while (null != (line = reader.readLine())) {
 				// logger.debug(line);
@@ -853,7 +852,7 @@ public class Response {
 	 * @return Map of attributes where the keys are the attribute names and the
 	 *         values are the attribute values.
 	 */
-	public Map<String, String> getLexisNexisInstandIdAttributes() {
+	public Map<String, String> getLexisNexisInstantIdAttributes() {
 		return this.getPrefixedResponseDataMap("INSTANTID_");
 	}
 
@@ -907,7 +906,7 @@ public class Response {
 	 */
 	public int getNumberCountersTriggered() {
 		try {
-			return Integer.parseInt((String) this.params.get("COUNTERS_TRIGGERED"));
+			return Integer.parseInt(this.params.get("COUNTERS_TRIGGERED"));
 		} catch (NumberFormatException nfe) {
 			logger.error("RIS returned a COUNTERS_TRIGGERED field " + "which could not be parsed to a number", nfe);
 		}

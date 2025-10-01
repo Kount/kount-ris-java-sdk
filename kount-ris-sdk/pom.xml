@@ -1,16 +1,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+
+    <version>9.0.0</version>
+    <packaging>jar</packaging>
+    <name>Kount Java SDK</name>
+    <description>A wrapper to facilitate making Kount RIS calls</description>
+    <url>https://github.com/Kount/kount-ris-java-sdk</url>
+    <artifactId>kount-ris-sdk</artifactId>
 
 	<parent>
 		<groupId>com.kount</groupId>
 		<artifactId>kount-java-parent</artifactId>
-		<version>8.0.0</version>
+		<version>9.0.0</version>
 	</parent>
-
-	<artifactId>kount-ris-sdk</artifactId>
-	<packaging>jar</packaging>
 
 	<dependencies>
 		<dependency>
@@ -32,7 +36,7 @@
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
@@ -41,23 +45,31 @@
 
 	</dependencies>
 
-<!--	<profiles>-->
-<!--		<profile>-->
-<!--			<id>doclint-java8-disable</id>-->
-<!--			<activation>-->
-<!--				<jdk>[1.8,)</jdk>-->
-<!--			</activation>-->
-<!--			<properties>-->
-<!--				<javadoc.opts>-Xdoclint:none</javadoc.opts>-->
-<!--			</properties>-->
-<!--		</profile>-->
-<!--	</profiles>-->
-
 	<build>
-	
 		<finalName>${project.artifactId}-${project.version}</finalName>
 
 		<plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.2.7</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+
+                        <configuration>
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -65,8 +77,6 @@
 				<version>3.11.2</version>
 				<configuration>
 					<sourcepath>${project.basedir}/src/main</sourcepath>
-					<aggregate>false</aggregate>
-					<additionalparam>${javadoc.opts}</additionalparam>
 					<additionalOptions>
 						<additionalOption>-Xdoclint:none</additionalOption>
 					</additionalOptions>
@@ -105,6 +115,9 @@
 				<artifactId>maven-assembly-plugin</artifactId>
 				<version>3.0.0</version>
 				<configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
 					<descriptors>
 						<descriptor>package.xml</descriptor>
 					</descriptors>
@@ -119,6 +132,115 @@
 					</execution>
 				</executions>
 			</plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-toolchains-plugin</artifactId>
+                <version>1.1</version> <!-- Use a recent version -->
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>toolchain</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <toolchains>
+                        <jdk>
+                            <version>8</version>
+                            <version>17</version>
+                            <version>21</version>
+                            <version>25</version>
+                        </jdk>
+                    </toolchains>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <source>${jdk.version}</source>
+                    <target>${jdk.version}</target>
+                    <showDeprecation>true</showDeprecation>
+                    <showWarnings>true</showWarnings>
+                    <compilerArgs>
+                        <arg>-proc:none</arg>
+                        <arg>-Xlint:all,-options,-path</arg>
+                    </compilerArgs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>compile-java-25</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <release>25</release>
+                            <outputDirectory>${project.build.outputDirectory}/META-INF/versions/25</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>compile-java-21</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <release>21</release>
+                            <outputDirectory>${project.build.outputDirectory}/META-INF/versions/21</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>compile-java-17</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <release>17</release>
+                            <outputDirectory>${project.build.outputDirectory}/META-INF/versions/17</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>compile-java-11</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <release>11</release>
+                            <outputDirectory>${project.build.outputDirectory}/META-INF/versions/11</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>compile-java-8</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <release>8</release>
+                            <source>1.8</source>
+                            <target>1.8</target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.1</version> <!-- Use an appropriate version -->
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Multi-Release>true</Multi-Release>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
 
 		</plugins>
 	</build>

@@ -7,7 +7,7 @@ package com.kount.ris.util;
  * 
  * @author Kount &lt;custserv@kount.com&gt;
  * @version $Id: KcEvent.java 10541 2010-07-02 18:09:10Z mmn $
- * @copyright 2010 Keynetics Inc
+ * @copyright 2025 Equifax
  */
 public class KcEvent {
 	/**
@@ -64,12 +64,10 @@ public class KcEvent {
 	 * @return String representation of this event.
 	 */
 	public String toString() {
-		StringBuffer str = new StringBuffer();
-		str.append("Decision: ").append(this.eventDecision).append("\n");
-		str.append("Expression: ").append(this.eventExpression).append("\n");
-		str.append("Code: ").append(this.eventCode);
 
-		return str.toString();
+        return "Decision: " + this.eventDecision + "\n" +
+                "Expression: " + this.eventExpression + "\n" +
+                "Code: " + this.eventCode;
 	}
 
 }
