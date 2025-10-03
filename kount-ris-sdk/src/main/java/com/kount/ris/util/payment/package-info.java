@@ -2,7 +2,7 @@
  * RIS Payment type classes.
  * @author Kount &lt;custserv@kount.com&gt;
  * @version $Id$
- * @copyright 2010 Keynetics Inc
+ * @copyright 2025 Equifax
  */
 package com.kount.ris.util.payment;
 

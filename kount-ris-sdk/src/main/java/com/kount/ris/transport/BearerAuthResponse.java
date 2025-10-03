@@ -3,7 +3,6 @@ package com.kount.ris.transport;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.OffsetDateTime;
-import java.util.Objects;
 
 public class BearerAuthResponse {
 
@@ -31,15 +30,21 @@ public class BearerAuthResponse {
         this.accessToken = accessToken;
     }
 
+    private boolean hasOffsetBeenAccountedFor = false;
+
+    private int latencyBufferSeconds = 120;
+
     public OffsetDateTime getExpiresAt() {
-        if (!createdAt.equals(expiresAt)) {
-            expiresAt = createdAt.plusSeconds(Integer.parseInt(expiresIn) - 60); // allow 60 seconds for latency
+        if (!expiresAt.equals(OffsetDateTime.MIN) && !hasOffsetBeenAccountedFor) {
+            hasOffsetBeenAccountedFor = true;
+            expiresAt = createdAt.plusSeconds(Integer.parseInt(expiresIn) - latencyBufferSeconds); // allow for latency
         }
 
         return expiresAt;
     }
 
     public void setExpiresAt(OffsetDateTime expiresAt) {
+        hasOffsetBeenAccountedFor = false;
         this.expiresAt = expiresAt;
     }
 
@@ -65,6 +70,14 @@ public class BearerAuthResponse {
 
     public void setTokenType(String tokenType) {
         this.tokenType = tokenType;
+    }
+
+    public int getLatencyBufferSeconds() {
+        return latencyBufferSeconds;
+    }
+
+    public void setLatencyBufferSeconds(int latencyBufferSeconds) {
+        this.latencyBufferSeconds = latencyBufferSeconds;
     }
 
 

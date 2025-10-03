@@ -1,19 +1,20 @@
 package com.kount.ris.khash;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
-
-import org.junit.jupiter.api.Test;
-
 import com.kount.ris.Inquiry;
 import com.kount.ris.Request;
 import com.kount.ris.util.payment.CardPayment;
 import com.kount.ris.util.payment.CheckPayment;
+import org.junit.jupiter.api.Test;
+
+import java.io.UnsupportedEncodingException;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 
 public class TokensTransformationTest {
 
 	@Test
-	public void testMaskingCorrectUsage() {
+	public void testMaskingCorrectUsage() throws UnsupportedEncodingException {
 		Request request = new Inquiry();
 		
 		request.setPaymentMasked(new CardPayment("0007380568572514"));
@@ -24,7 +25,7 @@ public class TokensTransformationTest {
 	}
 
 	@Test
-	public void testMaskingIncorrectParameter() {
+	public void testMaskingIncorrectParameter() throws UnsupportedEncodingException {
 		// this test verifies that masking is not applied to payment types different than card payments
 		// khashing is used instead
 		

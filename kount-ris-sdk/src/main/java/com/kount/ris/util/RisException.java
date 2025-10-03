@@ -1,11 +1,11 @@
 package com.kount.ris.util;
 
 /**
- * RIS exeption class.
+ * RIS exception class.
  * 
  * @author Kount &lt;custserv@kount.com&gt;
  * @version $Id$
- * @copyright 2010 Keynetics Inc
+ * @copyright 2025 Equifax
  */
 public class RisException extends Exception {
 

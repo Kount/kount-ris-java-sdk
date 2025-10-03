@@ -1,33 +1,20 @@
 package com.kount.ris.transport;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.net.URL;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
-import java.util.Map;
+import com.kount.ris.Response;
+import com.kount.ris.util.RisResponseException;
+import com.kount.ris.util.RisTransportException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import com.kount.ris.Response;
-import com.kount.ris.util.RisResponseException;
-import com.kount.ris.util.RisTransportException;
+import java.io.*;
+import java.net.URL;
+import java.security.*;
+import java.security.cert.CertificateException;
+import java.util.Map;
 
 /**
  * RIS http data transport class.
@@ -36,7 +23,7 @@ import com.kount.ris.util.RisTransportException;
  * 
  * @author Kount &lt;custserv@kount.com&gt;
  * @version $Id$
- * @copyright 2010 Keynetics Inc
+ * @copyright 2025 Equifax
  */
 public class KountHttpTransport extends Transport {
 
@@ -48,27 +35,27 @@ public class KountHttpTransport extends Transport {
 	/**
 	 * SSL socket factory.
 	 */
-	protected SSLSocketFactory factory;
+	private SSLSocketFactory factory;
 
 	/**
 	 * Private key pass phrase.
 	 */
-	protected char[] privateKeyPassphrase;
+	private char[] privateKeyPassphrase;
 
 	/**
 	 * Cert file input stream.
 	 */
-	protected InputStream pkcs12In;
+	private InputStream pkcs12In;
 
 	/**
 	 * Path to cert file.
 	 */
-	protected String pkcs12file;
+	private String pkcs12file;
 
 	/**
 	 * Default algorithm to use for ssl key manager.
 	 */
-	protected String algorithm = "SunX509";
+	private String algorithm;
 
 	/**
 	 * Default transport constructor.
@@ -87,10 +74,13 @@ public class KountHttpTransport extends Transport {
 	 * @param p12file
 	 *            Private key file
 	 */
-	public KountHttpTransport(String phrase, String url, String p12file) {
-		this.setPassPhrase(phrase);
+	public KountHttpTransport(String phrase, String url, String p12file) throws RisTransportException {
+        this.privateKeyPassphrase = phrase.toCharArray();
 		this.risServerUrl = url;
 		this.pkcs12file = p12file;
+		this.pkcs12In = null;
+		this.algorithm = KeyManagerFactory.getDefaultAlgorithm();
+		this.factory = createSSLSocketFactory();
 	}
 
 	/**
@@ -104,47 +94,38 @@ public class KountHttpTransport extends Transport {
 	 * @param p12in
 	 *            Private key resource stream
 	 */
-	public KountHttpTransport(String phrase, String url, InputStream p12in) {
-		this.setPassPhrase(phrase);
+	public KountHttpTransport(String phrase, String url, InputStream p12in) throws RisTransportException {
+        this.privateKeyPassphrase = phrase.toCharArray();
 		this.risServerUrl = url;
+		this.pkcs12file = null;
 		this.pkcs12In = p12in;
+		this.algorithm = KeyManagerFactory.getDefaultAlgorithm();
+		this.factory = createSSLSocketFactory();
 	}
 
 	/**
-	 * Set the private key pass phrase.
-	 * 
-	 * @param p
-	 *            Pass phrase
+	 * Constructor that accepts a private key pass phrase, a RIS url, a
+	 * PKCS12 file path, and an algorithm as input.
+	 *
+	 * @param phrase
+	 *            Private key pass phrase
+	 * @param url
+	 *            Ris server url
+	 * @param p12file
+	 *            Private key file
+	 * @param algorithm
+	 *            Key manager algorithm
 	 */
-	public void setPassPhrase(String p) {
-		this.privateKeyPassphrase = p.toCharArray();
+	public KountHttpTransport(String phrase, String url, String p12file, String algorithm) throws RisTransportException {
+        this.privateKeyPassphrase = phrase.toCharArray();
+		this.risServerUrl = url;
+		this.pkcs12file = p12file;
+		this.pkcs12In = null;
+		this.algorithm = algorithm;
+		this.factory = createSSLSocketFactory();
 	}
 
-	/**
-	 * Set the standard algorithm to use for the javax.net.ssl.KeyManagerFactory
-	 * See Java online documentation for a list of version J2SE 1.4 supported
-	 * algorithms. If not specified the algorithm used is SunX509.
-	 * 
-	 * @param a
-	 *            Name of standard algorithm.
-	 */
-	public void setAlgorithm(String a) {
-		this.algorithm = a;
-	}
-
-
-	/**
-	 * Get an SSL Socket factory.
-	 * 
-	 * @throws RisTransportException
-	 *             RIS transport exception
-	 * @return SSLSocketFactory
-	 */
-	protected SSLSocketFactory getSSLSocketFactory() throws RisTransportException {
-		if (null != this.factory) {
-			return this.factory;
-		}
-
+	private SSLSocketFactory createSSLSocketFactory() throws RisTransportException {
 		KeyStore store;
 		try {
 			store = KeyStore.getInstance("PKCS12");
@@ -161,18 +142,18 @@ public class KountHttpTransport extends Transport {
 			logger.error("Unable to read PKCS12 data", ioe);
 			throw new RisTransportException("Unable to read PKCS12 data", ioe);
 		} catch (CertificateException ce) {
-			logger.error("Unable to read PKCS12 data" + ce);
+            logger.error("Unable to read PKCS12 data: {}", String.valueOf(ce));
 			throw new RisTransportException("Unable to read PKCS12 data", ce);
-		} catch (NoSuchAlgorithmException nsae) {
-			logger.error("Unable to read PKCS12 data", nsae);
-			throw new RisTransportException("Unable to read PKCS12 data", nsae);
-		}
+		} catch (NoSuchAlgorithmException e) {
+            logger.error("No such algorithm found: {}", String.valueOf(e));
+            throw new RuntimeException(e);
+        }
 
-		KeyManagerFactory keyFact;
+        KeyManagerFactory keyFact;
 		try {
 			keyFact = KeyManagerFactory.getInstance(this.algorithm);
 		} catch (NoSuchAlgorithmException nsae) {
-			logger.error("Unable to create a KeyManagerFactory of type: " + this.algorithm, nsae);
+            logger.error("Unable to create a KeyManagerFactory of type: {}", this.algorithm, nsae);
 			throw new RisTransportException("Unable to create a KeyManagerFactory of type " + this.algorithm, nsae);
 		}
 
@@ -190,12 +171,18 @@ public class KountHttpTransport extends Transport {
 		}
 
 		SSLContext ctx;
-		try {
-			ctx = SSLContext.getInstance("TLSv1.2");
-		} catch (NoSuchAlgorithmException nsae) {
-			logger.error("Unable to create SSLContext of type TLS", nsae);
-			throw new RisTransportException("Unable to create SSLContext of type TLS", nsae);
-		}
+
+        try {
+            ctx = SSLContext.getInstance("TLSv1.3");
+        } catch (NoSuchAlgorithmException nsae) {
+            logger.error("Unable to create SSLContext of type TLS 1.3", nsae);
+            try {
+                ctx = SSLContext.getInstance("TLSv1.2");
+            } catch (NoSuchAlgorithmException nsa) {
+                logger.error("Unable to create SSLContext of type TLS 1.2", nsa);
+                throw new RisTransportException("Unable to create SSLContext of type TLS 1.2", nsa);
+            }
+        }
 
 		try {
 			ctx.init(keyFact.getKeyManagers(), null, null);
@@ -204,8 +191,7 @@ public class KountHttpTransport extends Transport {
 			throw new RisTransportException("Unable to initialize SSLContext", kme);
 		}
 
-		this.factory = ctx.getSocketFactory();
-		return this.factory;
+		return ctx.getSocketFactory();
 	}
 
 	/**
@@ -221,7 +207,7 @@ public class KountHttpTransport extends Transport {
 			try {
 				this.pkcs12In = new FileInputStream(fileName);
 			} catch (FileNotFoundException fnfe) {
-				logger.error("PKCS12 file specified as " + fileName + " could not be found", fnfe);
+                logger.error("PKCS12 file specified as {} could not be found", fileName, fnfe);
 				throw new RisTransportException("PKCS12 file specified as " + fileName + " could not be found", fnfe);
 			}
 		}
@@ -229,19 +215,18 @@ public class KountHttpTransport extends Transport {
 		return this.pkcs12In;
 	}
 
-	public Response sendResponse(Map<String, String> params) throws RisTransportException {
+	public Response sendRequest(Map<String, String> params) throws RisTransportException {
 		if (!params.containsKey("PTOK")
 				|| (params.containsKey("PENC") && "KHASH".equals(params.get("PENC")) && null == params.get("PTOK"))) {
 			params.put("PENC", "");
 		}
 
-		Reader reader = null;
 		try {
 			URL url = new URL(this.risServerUrl);
 
 			HttpsURLConnection urlConn = (HttpsURLConnection) url.openConnection();
 
-			urlConn.setSSLSocketFactory(this.getSSLSocketFactory());
+			urlConn.setSSLSocketFactory(this.factory);
 
 			urlConn.setDoInput(true);
 			urlConn.setDoOutput(true);
@@ -250,27 +235,22 @@ public class KountHttpTransport extends Transport {
 			urlConn.setConnectTimeout(this.connectTimeout);
 			urlConn.setReadTimeout(this.readTimeout);
 
-			OutputStreamWriter out = new OutputStreamWriter(urlConn.getOutputStream(), "UTF-8");
-			writeParametersToOutput(out, params);
-			out.flush();
-			out.close();
+            Response responseObj;
 
-			reader = new BufferedReader(new InputStreamReader(urlConn.getInputStream()));
-
-			Response responseObj = parse(reader);             
-			try {
-				reader.close();
-			} catch (IOException e) {
-				throw new RisTransportException("Error closing reader", e);
-			}
+			try (OutputStreamWriter out = new OutputStreamWriter(urlConn.getOutputStream(), "UTF-8")) {
+                writeParametersToOutput(out, params);
+                out.flush();
+            }
+			try (Reader reader = new BufferedReader(new InputStreamReader(urlConn.getInputStream()))) {
+                responseObj = parse(reader);
+            }
 		
 		return responseObj; 
 
 		} catch (IOException | RisResponseException ioe) {
 			logger.error("Error fetching RIS response", ioe);
-			throw new RisTransportException("An error ocurred while getting the RIS response", ioe);
+			throw new RisTransportException("An error occurred while getting the RIS response", ioe);
 		}
- 
 	}
 
 	protected Response parse(Reader r) throws RisResponseException {

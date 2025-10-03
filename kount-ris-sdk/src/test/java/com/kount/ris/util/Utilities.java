@@ -1,10 +1,11 @@
 package com.kount.ris.util;
 
-import java.util.Collections;
-
 import com.kount.ris.Inquiry;
 import com.kount.ris.util.payment.NoPayment;
 import com.kount.ris.util.payment.Payment;
+
+import java.io.UnsupportedEncodingException;
+import java.util.Collections;
 
 public class Utilities {
 	
@@ -15,7 +16,7 @@ public class Utilities {
 	private static final Address SHIPPING_ADDRESS = 
 			new Address("567 West S2A1 Court North", null, "Gnome", "AK", "99762", "US");
 
-	public static Inquiry defaultInquiry(String sessionId, long merchantId) {
+	public static Inquiry defaultInquiry(String sessionId, long merchantId) throws UnsupportedEncodingException {
 		Inquiry result = new Inquiry();
 		Payment payment = new NoPayment(); 
 		

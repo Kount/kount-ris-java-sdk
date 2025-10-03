@@ -1,25 +1,22 @@
 package com.kount.ris;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.kount.ris.transport.HttpApiTransport;
 import com.kount.ris.transport.KountHttpTransport;
 import com.kount.ris.transport.Transport;
 import com.kount.ris.util.RisException;
 import com.kount.ris.util.RisResponseException;
 import com.kount.ris.util.RisTransportException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.naming.ConfigurationException;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  * Controller class for the Kount RIS SDK.
@@ -29,7 +26,7 @@ import javax.naming.ConfigurationException;
  *
  * @author Kount &lt;custserv@kount.com&gt;
  * @version $Id$
- * @copyright 2010 Keynetics Inc
+ * @copyright 2025 Equifax
  */
 public class KountRisClient {
 
@@ -69,8 +66,8 @@ public class KountRisClient {
 	 * @param p12file
 	 *            Path to PKCS12 private key file
 	 */
-	public KountRisClient(String phrase, String url, String p12file) {
-		logger.debug("RIS endpoint URL [" + url + "]");
+	public KountRisClient(String phrase, String url, String p12file) throws RisTransportException {
+        logger.debug("RIS endpoint URL [{}]", url);
 		transport = new KountHttpTransport(phrase, url, p12file);
 	}
 
@@ -84,7 +81,7 @@ public class KountRisClient {
 	 * @param p12in
 	 *            PKCS12 private key file input stream
 	 */
-	public KountRisClient(String phrase, String url, InputStream p12in) {
+	public KountRisClient(String phrase, String url, InputStream p12in) throws RisTransportException {
 		transport = new KountHttpTransport(phrase, url, p12in);
 	}
 
@@ -98,26 +95,52 @@ public class KountRisClient {
 	 * @throws RisTransportException
 	 *             Exception if opening the api key file has a problem.
 	 */
-	public KountRisClient(URL url, File apiKeyFile) throws RisTransportException, ConfigurationException {
+	public KountRisClient(URL url, File apiKeyFile) throws RisTransportException {
 		getApiKey(apiKeyFile);
 		transport = new HttpApiTransport(url, apiKey);
 	}
 
-	/**
-	 * Constructor for using API Key instead of Cert.
-	 *
-	 * @param url
-	 *            Ris server URL.
-	 * @param apiKeyFile
-	 *            API key (key data as a string).
-	 * @param connectionPoolThreads
-	 *            API key (key data as a int).
-	 * @param connectionPerRoute
-	 *            API key (key data as a int).
-	 */
-	public KountRisClient(URL url, File apiKeyFile, int connectionPoolThreads , int connectionPerRoute ) throws RisTransportException, ConfigurationException {
+
+    /**
+     * For use with Migration mode and Payments Fraud integration.
+     *
+     * @param url Ris server URL
+     * @param apiKeyFile API key file (absolute path)
+     * @param migrationModeEnabled true if migration mode is enabled, false otherwise
+     * @param paymentsFraudApiKey API key for Payments Fraud
+     * @param paymentsFraudClientId Client ID for Payments Fraud
+     * @param paymentsFraudApiEndpoint Payments Fraud API endpoint
+     * @param paymentsFraudAuthEndpoint Payments Fraud Auth endpoint
+     * @throws RisTransportException RisTransportException
+     *          Exception if opening the api key file has a problem.
+     * @throws ConfigurationException ConfigurationException
+     *          Exception if migration configuration is invalid.
+     */
+	public KountRisClient(URL url, File apiKeyFile, boolean migrationModeEnabled, String paymentsFraudApiKey, String paymentsFraudClientId, String paymentsFraudApiEndpoint, String paymentsFraudAuthEndpoint) throws RisTransportException, ConfigurationException {
 		getApiKey(apiKeyFile);
-		transport = new HttpApiTransport(url, apiKey, connectionPoolThreads, connectionPerRoute );
+		transport = new HttpApiTransport(url, apiKey, migrationModeEnabled, paymentsFraudApiKey, paymentsFraudClientId, paymentsFraudApiEndpoint, paymentsFraudAuthEndpoint);
+	}
+
+    /**
+     *For use with Migration mode and Payments Fraud integration.
+     *
+     * @param url Ris server URL
+     * @param apiKeyFile API key file (absolute path)
+     * @param connectionPoolThreads Number of connection pool threads
+     * @param connectionPerRoute Number of connections per route
+     * @param migrationModeEnabled true if migration mode is enabled, false otherwise
+     * @param paymentsFraudApiKey API key for Payments Fraud
+     * @param paymentsFraudClientId Client ID for Payments Fraud
+     * @param paymentsFraudApiEndpoint Payments Fraud API endpoint
+     * @param paymentsFraudAuthEndpoint Payments Fraud Auth endpoint
+     * @throws RisTransportException RisTransportException
+     *          Exception if opening the api key file has a problem.
+     * @throws ConfigurationException ConfigurationException
+     *          Exception if migration configuration is invalid.
+     */
+	public KountRisClient(URL url, File apiKeyFile, int connectionPoolThreads , int connectionPerRoute, boolean migrationModeEnabled, String paymentsFraudApiKey, String paymentsFraudClientId, String paymentsFraudApiEndpoint, String paymentsFraudAuthEndpoint) throws RisTransportException, ConfigurationException {
+		getApiKey(apiKeyFile);
+		transport = new HttpApiTransport(url, apiKey, connectionPoolThreads, connectionPerRoute, migrationModeEnabled, paymentsFraudApiKey, paymentsFraudClientId, paymentsFraudApiEndpoint, paymentsFraudAuthEndpoint);
 	}
 
 	/**
@@ -128,9 +151,27 @@ public class KountRisClient {
 	 * @param key
 	 *            API key (key data as a string).
 	 */
-	public KountRisClient(URL url, String key) throws ConfigurationException {
-		setApiKey(key);
+	public KountRisClient(URL url, String key) {
+		apiKey = key;
 		transport = new HttpApiTransport(url, apiKey);
+	}
+
+	/**
+     *For use with Migration mode and Payments Fraud integration.
+     *
+     * @param url Ris server URL
+     * @param key API key
+     * @param migrationModeEnabled true if migration mode is enabled, false otherwise
+     * @param paymentsFraudApiKey API key for Payments Fraud
+     * @param paymentsFraudClientId Client ID for Payments Fraud
+     * @param paymentsFraudApiEndpoint Payments Fraud API endpoint
+     * @param paymentsFraudAuthEndpoint Payments Fraud Auth endpoint
+     * @throws ConfigurationException ConfigurationException
+     *          Exception if migration configuration is invalid.
+	 */
+	public KountRisClient(URL url, String key, boolean migrationModeEnabled, String paymentsFraudApiKey, String paymentsFraudClientId, String paymentsFraudApiEndpoint, String paymentsFraudAuthEndpoint) throws ConfigurationException {
+		apiKey = key;
+		transport = new HttpApiTransport(url, apiKey, migrationModeEnabled, paymentsFraudApiKey, paymentsFraudClientId, paymentsFraudApiEndpoint, paymentsFraudAuthEndpoint);
 	}
 
 	/**
@@ -145,10 +186,30 @@ public class KountRisClient {
 	 * @param connectionPerRoute
 	 *            API key (key data as an int).
 	 */
-	public KountRisClient(URL url, String key, int connectionPoolThreads , int connectionPerRoute ) throws ConfigurationException {
-		setApiKey(key);
+	public KountRisClient(URL url, String key, int connectionPoolThreads , int connectionPerRoute ) {
+		apiKey = key;
 		transport = new HttpApiTransport(url, apiKey, connectionPoolThreads, connectionPerRoute );
 	}
+
+    /**
+     * Constructor for using API Key instead of Cert.
+     *
+     * @param url Ris server URL.
+     * @param key PI key (key data as a string).
+     * @param connectionPoolThreads Number of connection pool threads
+     * @param connectionPerRoute Number of connections per route
+     * @param migrationModeEnabled true if migration mode is enabled, false otherwise
+     * @param paymentsFraudApiKey API key for Payments Fraud
+     * @param paymentsFraudClientId Client ID for Payments Fraud
+     * @param paymentsFraudApiEndpoint Payments Fraud API endpoint
+     * @param paymentsFraudAuthEndpoint Payments Fraud Auth endpoint
+     * @throws ConfigurationException ConfigurationException
+     *          Exception if migration configuration is invalid.
+     */
+    public KountRisClient(URL url, String key, int connectionPoolThreads , int connectionPerRoute, boolean migrationModeEnabled, String paymentsFraudApiKey, String paymentsFraudClientId, String paymentsFraudApiEndpoint, String paymentsFraudAuthEndpoint) throws ConfigurationException {
+        apiKey = key;
+        transport = new HttpApiTransport(url, apiKey, connectionPoolThreads, connectionPerRoute, migrationModeEnabled, paymentsFraudApiKey, paymentsFraudClientId, paymentsFraudApiEndpoint, paymentsFraudAuthEndpoint);
+    }
 
 	/**
 	 * Set the transport object to use. If not specified the default transport
@@ -184,9 +245,7 @@ public class KountRisClient {
 	public Response process(Request r) throws RisException {
 		logger.trace("process()");
 		if (transport != null) {
-			
-			return   transport.sendResponse(r.getParams());
-
+			return transport.sendRequest(r.getParams());
 		} else {
 			throw new RisTransportException("No transport was specified, unable to send request.");
 		}
@@ -211,22 +270,20 @@ public class KountRisClient {
 	 *
 	 * @param apiKeyFile
 	 *            API key file.
-	 * @return String API Key.
 	 * @throws RisTransportException
 	 *             RIS transport exception
 	 */
-	protected final String getApiKey(File apiKeyFile) throws RisTransportException {
+	protected final void getApiKey(File apiKeyFile) throws RisTransportException {
 		logger.trace("getApiKey()");
 		if (apiKey == null && apiKeyFile != null) {
 			try {
 				byte[] keyBytes = Files.readAllBytes(Paths.get(apiKeyFile.toURI()));
-				String key = new String(keyBytes, StandardCharsets.UTF_8);
-				setApiKey(key.trim());
+				String key = new String(keyBytes, "UTF-8");
+                apiKey = key.trim();
 			} catch (IOException e) {
-				logger.error("API Key file (" + apiKeyFile + ") could not be found:\n" + e);
+                logger.error("API Key file ({}) could not be found:\n{}", apiKeyFile, e);
 				throw new RisTransportException("API Key file (" + apiKeyFile + ") could not be found:\n" + e);
 			}
 		}
-		return apiKey;
 	}
 }

@@ -20,38 +20,100 @@ variables:
   # GPG_PASSPHRASE: ${GPG_PASSPHRASE}
 
 .maven:
-  image: maven:amazoncorretto
+  tags: [aws-kount-shared-infra]
+  image: amazoncorretto:8
   before_script:
-    - echo ${SONATYPE_USERID}
     - echo "$GPG_KEY" > private_key_sender.asc
     - chmod 400 ./private_key_sender.asc
     - echo '<?xml version="1.0" encoding="UTF-8"?><settings><servers><server><id>ossrh</id><username>'${SONATYPE_USERID}'</username><password>'${SONATYPE_PASSWORD}'</password></server></servers><profiles><profile><activation><activeByDefault>true</activeByDefault></activation><id>ossrh</id><properties><gpg.executable>gpg</gpg.executable><gpg.passphrase>'${GPG_PASSPHRASE}'</gpg.passphrase></properties></profile></profiles></settings>' > settings.xml
     - chmod 400 ./settings.xml
-    - yum install -y openssl
+    - yum install -y openssl wget tar gzip
+    - wget -nv https://corretto.aws/downloads/latest/amazon-corretto-8-x64-linux-jdk.tar.gz -O jdk8.tar.gz && tar -xzf jdk8.tar.gz && rm jdk8.tar.gz && mv amazon-corretto-8.* /root/jdk8
+    - wget -nv https://corretto.aws/downloads/latest/amazon-corretto-11-x64-linux-jdk.tar.gz -O jdk11.tar.gz && tar -xzf jdk11.tar.gz && rm jdk11.tar.gz && mv amazon-corretto-11.* /root/jdk11
+    - wget -nv https://corretto.aws/downloads/latest/amazon-corretto-17-x64-macos-jdk.tar.gz -O jdk17.tar.gz && tar -xzf jdk17.tar.gz && rm jdk17.tar.gz && mv amazon-corretto-17.* /root/jdk17
+    - wget -nv https://corretto.aws/downloads/latest/amazon-corretto-21-x64-macos-jdk.tar.gz -O jdk21.tar.gz && tar -xzf jdk21.tar.gz && rm jdk21.tar.gz && mv amazon-corretto-21.* /root/jdk21
+    - wget -nv https://corretto.aws/downloads/latest/amazon-corretto-25-x64-macos-jdk.tar.gz -O jdk25.tar.gz && tar -xzf jdk25.tar.gz && rm jdk25.tar.gz && mv amazon-corretto-25.* /root/jdk25
+    - wget -nv https://archive.apache.org/dist/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.tar.gz -O maven.tar.gz && tar -xzf maven.tar.gz && rm maven.tar.gz && mv apache-maven-3.9.6 /opt/maven
+    - export MAVEN_HOME=/opt/maven
+    - export PATH=$MAVEN_HOME/bin:$PATH
+    - export JAVA_HOME=/root/jdk8
+    - export PATH=$JAVA_HOME/bin:$PATH
+    - ls $JAVA_HOME
+    - java -version
+    - mvn -version
+    - mkdir /root/.m2
     - |
-      if [ -n "${BUILD_VERSION}" ]
-      then
-        # BUILD_VERSION is cut to 17 characters so SDK_VERSION will not exceed 32 characters in total
-        BUILD_VERSION=`echo $BUILD_VERSION | cut -c-17`
-        echo "sed -i \"s/0.0.0/${BUILD_VERSION}/g\" ${CI_PROJECT_DIR}/kount-ris-sdk/src/main/java/com/kount/ris/Config.java"
-        sed -i "s/0.0.0/${BUILD_VERSION}/g" ${CI_PROJECT_DIR}/kount-ris-sdk/src/main/java/com/kount/ris/Config.java
-        cat ${CI_PROJECT_DIR}/kount-ris-sdk/src/main/java/com/kount/ris/Config.java
-        POM_VERS=`echo $BUILD_VERSION`
-        if grep -q "-" <<< "$BUILD_VERSION";
-        then
-          BASE_VERS=`echo "$BUILD_VERSION" | sed 's/-.*//'`
-          NEXT_VERS=`echo "$BASE_VERS" | awk -vFS=. -vOFS=. '{++$NF;print}'`
-          POM_VERS="$NEXT_VERS-SNAPSHOT"
-        fi
-        echo ${POM_VERS}
-        mvn versions:set -DnewVersion=${POM_VERS}
-        mvn versions:update-child-modules
-      fi
+      cat << EOF > /root/.m2/toolchains.xml
+      <?xml version="1.0" encoding="UTF-8"?>
+      <toolchains>
+      
+      <toolchain>
+      <type>jdk</type>
+      <provides>
+      <version>8</version>
+      </provides>
+      <configuration>
+      <jdkHome>/root/jdk8</jdkHome>
+      </configuration>
+      </toolchain>
+      
+      <toolchain>
+      <type>jdk</type>
+      <provides>
+      <version>17</version>
+      </provides>
+      <configuration>
+      <jdkHome>/root/jdk17</jdkHome>
+      </configuration>
+      </toolchain>
+      
+      <toolchain>
+      <type>jdk</type>
+      <provides>
+      <version>21</version>
+      </provides>
+      <configuration>
+      <jdkHome>/root/jdk21</jdkHome>
+      </configuration>
+      </toolchain>
+      
+      <toolchain>
+      <type>jdk</type>
+      <provides>
+      <version>25</version>
+      </provides>
+      <configuration>
+      <jdkHome>/root/jdk25</jdkHome>
+      </configuration>
+      </toolchain>
+      
+      </toolchains>
+      EOF
+
+#    - |
+#      if [ -n "${BUILD_VERSION}" ]
+#      then
+#        # BUILD_VERSION is cut to 17 characters so SDK_VERSION will not exceed 32 characters in total
+#        BUILD_VERSION=`echo $BUILD_VERSION | cut -c-17`
+#        echo "sed -i \"s/0.0.0/${BUILD_VERSION}/g\" ${CI_PROJECT_DIR}/kount-ris-sdk/src/main/java/com/kount/ris/Config.java"
+#        sed -i "s/0.0.0/${BUILD_VERSION}/g" ${CI_PROJECT_DIR}/kount-ris-sdk/src/main/java/com/kount/ris/Config.java
+#        cat ${CI_PROJECT_DIR}/kount-ris-sdk/src/main/java/com/kount/ris/Config.java
+#        POM_VERS=`echo $BUILD_VERSION`
+#        if grep -q "-" <<< "$BUILD_VERSION";
+#        then
+#          BASE_VERS=`echo "$BUILD_VERSION" | sed 's/-.*//'`
+#          NEXT_VERS=`echo "$BASE_VERS" | awk -vFS=. -vOFS=. '{++$NF;print}'`
+#          POM_VERS="$NEXT_VERS-SNAPSHOT"
+#        fi
+#        echo ${POM_VERS}
+#        mvn versions:set -DnewVersion=${POM_VERS}
+#        mvn versions:update-child-modules
+#      fi
     - |
         if [ -n "${PAYMENTS_FRAUD_API_ENDPOINT}" ]
         then
           HOST_NAME=$(echo ${PAYMENTS_FRAUD_API_ENDPOINT} | sed 's/https:\/\///' | sed 's/\//\//' | sed 's/\/.*//')
-          KEYSTORE_PATH=$JAVA_HOME/lib/security/cacerts
+          KEYSTORE_PATH=$JAVA_HOME/jre/lib/security/cacerts
           
           # Download the certificate
           echo "Downloading certificate from $HOST_NAME..."
@@ -76,9 +138,9 @@ variables:
           fi
           rm temp.crt
         fi
-
+    - |
         HOST_NAME='risk.test.kount.net'
-        KEYSTORE_PATH=$JAVA_HOME/lib/security/cacerts
+        KEYSTORE_PATH=$JAVA_HOME/jre/lib/security/cacerts
       
         # Download the certificate
         echo "Downloading certificate from $HOST_NAME..."
@@ -121,21 +183,13 @@ test:
   stage: test
   extends: .maven
   script:
-    - mvn verify -e -Dsurefire.useFile=false -DRis.MerchantId=${RIS_SDK_SANDBOX_MERCHANT_ID} -DRis.API.Key=${RIS_SDK_SANDBOX_API_KEY} -Dkount.config.key=$(echo ${RIS_CONFIG_KEY_BASE64} | openssl base64 -d)
-    - mvn jacoco:report
+    - mvn verify -e -X -Dsurefire.useFile=false -DRis.MerchantId=${RIS_SDK_SANDBOX_MERCHANT_ID} -DRis.Url=https://risk.test.kount.net -DRis.API.Key=${RIS_SDK_SANDBOX_API_KEY} -Dkount.config.key=$(echo ${RIS_CONFIG_KEY_BASE64} | openssl base64 -d) -DMigration.Mode.Enabled=false -DPayments.Fraud.Api.Key=${PAYMENTS_FRAUD_API_KEY} -DPayments.Fraud.Api.Endpoint=${PAYMENTS_FRAUD_API_ENDPOINT} -DPayments.Fraud.Auth.Endpoint=${PAYMENTS_FRAUD_AUTH_ENDPOINT} -DPayments.Fraud.Client.Id=${PAYMENTS_FRAUD_CLIENT_ID} -Djavax.net.ssl.trustStore=$JAVA_HOME/jre/lib/security/cacerts
+#    - mvn jacoco:report
   artifacts:
     paths:
-      - ${CI_PROJECT_DIR}/sdk-integration-tests/target/reports/jacoco-aggregate/jacoco.xml
-
-test migration:
-  stage: test
-  extends: .maven
-  script:
-    - mvn verify -e -Dsurefire.useFile=false -DRis.MerchantId=${RIS_SDK_SANDBOX_MERCHANT_ID} -DRis.API.Key=${RIS_SDK_SANDBOX_API_KEY} -Dkount.config.key=$(echo ${RIS_CONFIG_KEY_BASE64} | openssl base64 -d) -Dmigration.mode.enabled=true -Dpayments.fraud.api.key=${PAYMENTS_FRAUD_API_KEY} -Dpayments.fraud.api.endpoint=${PAYMENTS_FRAUD_API_ENDPOINT} -Dpayments.fraud.auth.endpoint=${PAYMENTS_FRAUD_AUTH_ENDPOINT} -Dpayments.fraud.client.id=${PAYMENTS_FRAUD_CLIENT_ID}
-    - mvn jacoco:report
-  artifacts:
-    paths:
-      - ${CI_PROJECT_DIR}/sdk-integration-tests/target/reports/jacoco-aggregate/jacoco.xml
+      - ${CI_PROJECT_DIR}/sdk-integration-tests/target/surefire-reports
+#      - ${CI_PROJECT_DIR}/sdk-integration-tests/target/reports/jacoco-aggregate/jacoco.xml
+    when: always
    
 sonarqube scan:
   extends: .sq-scan
@@ -144,7 +198,7 @@ sonarqube scan:
   variables:
     SRC_EXCLUSIONS: "**/target/**,**/logs/**,**/bin/**,**/.m2/**,**/DS_Store/**,**/idea/**,**/*LICENSE,**/*.classpath,**/*.project,**/*.settings,**/*.gitignore,**/*.yml,**/test/**"
     JAVA_BINARIES_PATHS: "${CI_PROJECT_DIR}/kount-ris-sdk/target/classes/com/kount"
-    JACOCO_COVERAGE_REPORT_PATHS: "${CI_PROJECT_DIR}/sdk-integration-tests/target/reports/jacoco-aggregate/jacoco.xml"
+#    JACOCO_COVERAGE_REPORT_PATHS: "${CI_PROJECT_DIR}/sdk-integration-tests/target/reports/jacoco-aggregate/jacoco.xml"
 
 deploy:
   stage: deploy

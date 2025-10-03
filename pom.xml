@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.kount</groupId>
   <artifactId>kount-java-parent</artifactId>
-  <version>8.0.0</version>
+  <version>9.0.0</version>
   <packaging>pom</packaging>
 
+
   <name>Kount Java SDK</name>
-	
+
   <description>A wrapper to facilitate making Kount RIS calls</description>
-	
+
   <url>https://github.com/Kount/kount-ris-java-sdk</url>
 
 
@@ -28,8 +29,7 @@
   </modules>
 
   <properties>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
+    <jdk.version>1.8</jdk.version>
     <maven.build.timestamp.format>yyyyMMdd'T'HHmmss</maven.build.timestamp.format>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.release.plugin.version>3.1.1</maven.release.plugin.version>
@@ -37,21 +37,21 @@
     <log4j-core.version>2.24.3</log4j-core.version>
     <log4j-api.version>2.24.3</log4j-api.version>
 	<jackson.version>2.18.2</jackson.version>
-	<httpclient5.version>5.4.2</httpclient5.version>
-	<httpcomponents.version>5.3.3</httpcomponents.version>
+	<httpclient5.version>5.5.1</httpclient5.version>
+	<httpcomponents.version>5.3.6</httpcomponents.version>
     <junit.version>5.11.4</junit.version>
-	<jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
-	<hamcrest.version>3.0</hamcrest.version>
+<!-- Commenting out JaCoco due to compatibilities issues with MRJARs leaving it here for future reference in case they get it resolved -->
+<!--	<jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>-->
   </properties>
-  
+
   <licenses>
 		<license>
 			<name>Apache License, Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
-	
+
 	<distributionManagement>
 		<snapshotRepository>
 			<id>ossrh</id>
@@ -62,8 +62,8 @@
 			<url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
 		</repository>
 	</distributionManagement>
-	
-	
+
+
 	<profiles>
 		<profile>
 			<id>kount-ris-sdk</id>
@@ -118,6 +118,103 @@
 						</executions>
 					</plugin>
 
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-toolchains-plugin</artifactId>
+                        <version>1.1</version> <!-- Use a recent version -->
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>toolchain</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <toolchains>
+                                <jdk>
+                                    <version>8</version>
+                                    <version>17</version>
+                                    <version>21</version>
+                                    <version>25</version>
+                                </jdk>
+                            </toolchains>
+                        </configuration>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>3.13.0</version>
+                        <configuration>
+                            <source>${jdk.version}</source>
+                            <target>${jdk.version}</target>
+                            <showDeprecation>true</showDeprecation>
+                            <showWarnings>true</showWarnings>
+                            <compilerArgs>
+                                <arg>-proc:none</arg>
+                                <arg>-Xlint:all,-options,-path</arg>
+<!--                                <arg>-verbose</arg>-->
+                            </compilerArgs>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>compile-java-25</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>compile</goal>
+                                </goals>
+                                <configuration>
+                                    <release>25</release>
+                                    <outputDirectory>${project.build.outputDirectory}/META-INF/versions/25</outputDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>compile-java-21</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>compile</goal>
+                                </goals>
+                                <configuration>
+                                    <release>21</release>
+                                    <outputDirectory>${project.build.outputDirectory}/META-INF/versions/21</outputDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>compile-java-17</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>compile</goal>
+                                </goals>
+                                <configuration>
+                                    <release>17</release>
+                                    <outputDirectory>${project.build.outputDirectory}/META-INF/versions/17</outputDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>compile-java-11</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>compile</goal>
+                                </goals>
+                                <configuration>
+                                    <release>11</release>
+                                    <outputDirectory>${project.build.outputDirectory}/META-INF/versions/11</outputDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>compile-java-8</id>
+                                <goals>
+                                    <goal>compile</goal>
+                                </goals>
+                                <configuration>
+                                    <release>8</release>
+                                    <source>1.8</source>
+                                    <target>1.8</target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
 					<!-- To sign the artifacts -->
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
@@ -126,7 +223,7 @@
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>
-								<phase>verify</phase>
+								<phase>prepare-package</phase>
 								<goals>
 									<goal>sign</goal>
 								</goals>
@@ -140,34 +237,65 @@
 							</execution>
 						</executions>
 					</plugin>
-					<plugin>
-						<groupId>org.sonatype.plugins</groupId>
-						<artifactId>nexus-staging-maven-plugin</artifactId>
-						<version>1.7.0</version>
-						<extensions>true</extensions>
-						<configuration>
-							<serverId>ossrh</serverId>
-							<nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-							<autoReleaseAfterClose>true</autoReleaseAfterClose>
-						</configuration>
-					</plugin>
+<!--					<plugin>-->
+<!--						<groupId>org.sonatype.plugins</groupId>-->
+<!--						<artifactId>nexus-staging-maven-plugin</artifactId>-->
+<!--						<version>1.7.0</version>-->
+<!--						<extensions>true</extensions>-->
+<!--						<configuration>-->
+<!--							<serverId>central</serverId>-->
+<!--							<nexusUrl>https://central.sonatype.com</nexusUrl>-->
+<!--							<autoReleaseAfterClose>true</autoReleaseAfterClose>-->
+<!--						</configuration>-->
+<!--					</plugin>-->
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.7.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>true</autoPublish>
+                            <waitUntil>published</waitUntil>
+                            <checksums>all</checksums>
+                            <centralBaseUrl> https://central.sonatype.com</centralBaseUrl>
+                            <excludeArtifacts>
+                                <excludeArtifact>sdk-integration-tests</excludeArtifact>
+                            </excludeArtifacts>
+
+                        </configuration>
+                    </plugin>
+
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>3.4.1</version> <!-- Use an appropriate version -->
+                        <configuration>
+                            <archive>
+                                <manifestEntries>
+                                    <Multi-Release>true</Multi-Release>
+                                </manifestEntries>
+                            </archive>
+                        </configuration>
+                    </plugin>
 				</plugins>
 
 			</build>
 		</profile>
 
 	</profiles>
-	
+
 
   <dependencyManagement>
     <dependencies>
-	
+
       <dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
 			<version>${log4j-core.version}</version>
 		</dependency>
-	
+
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-api</artifactId>
@@ -198,76 +326,82 @@
 		  <scope>test</scope>
         </dependency>
 
-		<dependency>
-			<groupId>org.hamcrest</groupId>
-			<artifactId>hamcrest</artifactId>
-			<version>${hamcrest.version}</version>
-			<scope>test</scope>
-		</dependency>
-
 	</dependencies>
   </dependencyManagement>
 
-  <reporting>
-        <outputDirectory>target/reports</outputDirectory>
-        <plugins>
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>${jacoco-maven-plugin.version}</version>
-            </plugin>
-        </plugins>
-    </reporting>
+<!--  <reporting>-->
+<!--        <outputDirectory>target/reports</outputDirectory>-->
+<!--        <plugins>-->
+<!--            <plugin>-->
+<!--                <groupId>org.jacoco</groupId>-->
+<!--                <artifactId>jacoco-maven-plugin</artifactId>-->
+<!--                <version>${jacoco-maven-plugin.version}</version>-->
+<!--                <configuration>-->
+<!--                    &lt;!&ndash; Exclude the versions directories from the JaCoCo report &ndash;&gt;-->
+<!--                    <excludes>-->
+<!--                        <exclude>META-INF/versions/**</exclude>-->
+<!--                    </excludes>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
+<!--        </plugins>-->
+<!--    </reporting>-->
 
   	<build>
     	<plugins>
-			<plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>${jacoco-maven-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>pre-unit-test</id>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                        <configuration>
-                            <propertyName>surefire.jacoco.args</propertyName>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>post-unit-test</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>pre-integration-test</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>prepare-agent-integration</goal>
-                        </goals>
-                        <configuration>
-                            <dumpOnExit>true</dumpOnExit>
-                            <propertyName>failsafe.jacoco.args</propertyName>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>post-integration-test</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>report-aggregate</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+<!--			<plugin>-->
+<!--                <groupId>org.jacoco</groupId>-->
+<!--                <artifactId>jacoco-maven-plugin</artifactId>-->
+<!--                <version>${jacoco-maven-plugin.version}</version>-->
+<!--                <configuration>-->
+<!--                    <excludes>-->
+<!--                        <exclude>java/*</exclude>-->
+<!--                        <exclude>javax/*</exclude>-->
+<!--                        <exclude>sun/*</exclude>-->
+<!--                    </excludes>-->
+<!--                </configuration>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>pre-unit-test</id>-->
+<!--                        <goals>-->
+<!--                            <goal>prepare-agent</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <propertyName>surefire.jacoco.args</propertyName>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                    <execution>-->
+<!--                        <id>post-unit-test</id>-->
+<!--                        <phase>verify</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>report</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                    <execution>-->
+<!--                        <id>pre-integration-test</id>-->
+<!--                        <phase>pre-integration-test</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>prepare-agent-integration</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <dumpOnExit>true</dumpOnExit>-->
+<!--                            <propertyName>failsafe.jacoco.args</propertyName>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                    <execution>-->
+<!--                        <id>post-integration-test</id>-->
+<!--                        <phase>verify</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>report-aggregate</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
             <plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.20</version>
 				<configuration>
-				<argLine>${surefire.jacoco.args}</argLine>
+<!--				<argLine>${surefire.jacoco.args}</argLine>-->
 				<systemPropertyVariables>
 					<kount.config.key>${config.key}</kount.config.key>
 				</systemPropertyVariables>
@@ -298,7 +432,7 @@
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>2.22.2</version>
 				<configuration>
-					<argLine>${failsafe.jacoco.args}</argLine>
+<!--					<argLine>${failsafe.jacoco.args}</argLine>-->
 					<printSummary>true</printSummary>
 					<redirectTestOutputToFile>true</redirectTestOutputToFile>
 					<useFile>false</useFile>

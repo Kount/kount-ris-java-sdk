@@ -1,13 +1,11 @@
 package com.kount.ris.util;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
-
+import com.github.fzakaria.ascii85.Ascii85;
 import org.junit.jupiter.api.Test;
 
-import com.github.fzakaria.ascii85.Ascii85;
+import java.io.UnsupportedEncodingException;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class Base85EncodeDecodeTest {
 
@@ -16,13 +14,13 @@ public class Base85EncodeDecodeTest {
 	
 	@Test
 	public void testEncode() throws UnsupportedEncodingException {
-		String encoded = Ascii85.encode(PLAIN_TEXT.getBytes(StandardCharsets.UTF_8));
+		String encoded = Ascii85.encode(PLAIN_TEXT.getBytes("UTF-8"));
 		assertEquals(ENCODED_TEXT, encoded);
 	}
 
 	@Test
 	public void testDecode() throws UnsupportedEncodingException {
-		String decoded = new String(Ascii85.decode(ENCODED_TEXT), StandardCharsets.UTF_8);
+		String decoded = new String(Ascii85.decode(ENCODED_TEXT), "UTF-8");
 		assertEquals(PLAIN_TEXT, decoded);
 	}
 }

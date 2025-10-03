@@ -8,7 +8,7 @@ import java.util.Map;
  * 
  * @author Kount &lt;custserv@kount.com&gt;
  * @version $Id$
- * @copyright 2010 Keynetics Inc
+ * @copyright 2025 Equifax
  */
 public class RisResponseException extends RisException {
 
@@ -54,13 +54,13 @@ public class RisResponseException extends RisException {
 		ERROR_MESSAGES.put("302", "Bad mode");
 		ERROR_MESSAGES.put("303", "Bad merchant ID");
 		ERROR_MESSAGES.put("304", "Bad session ID");
-		ERROR_MESSAGES.put("305", "Bad trasaction ID");
+		ERROR_MESSAGES.put("305", "Bad transaction ID");
 
 		ERROR_MESSAGES.put("311", "Bad currency type");
 		ERROR_MESSAGES.put("312", "Bad total");
 
 		ERROR_MESSAGES.put("321", "Bad email");
-		ERROR_MESSAGES.put("321", "Bad anid");
+		ERROR_MESSAGES.put("322", "Bad anid");
 
 		ERROR_MESSAGES.put("331", "Bad payment type");
 		ERROR_MESSAGES.put("332", "Bad card number");

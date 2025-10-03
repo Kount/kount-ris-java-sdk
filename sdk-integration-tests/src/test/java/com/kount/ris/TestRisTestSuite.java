@@ -1,59 +1,39 @@
 package com.kount.ris;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.core.StringContains;
-import org.hamcrest.core.CombinableMatcher;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-
+import com.kount.ris.util.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
 
-import com.kount.ris.util.AuthorizationStatus;
-import com.kount.ris.util.BankcardReply;
-import com.kount.ris.util.CartItem;
-import com.kount.ris.util.InquiryMode;
-import com.kount.ris.util.KcEvent;
-import com.kount.ris.util.Khash;
-import com.kount.ris.util.MerchantAcknowledgment;
-import com.kount.ris.util.RisException;
-import com.kount.ris.util.TestConfiguration;
-import com.kount.ris.util.UpdateMode;
-import com.kount.ris.util.Utilities;
-
 import javax.naming.ConfigurationException;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 
 public class TestRisTestSuite {
 
     private static final Logger logger = LogManager.getLogger(TestRisTestSuite.class);
 
-    private KountRisClient client = null;
+    private KountRisClient client;
     private long merchantId;
 
     private String sessionId = null;
     private Inquiry inq = null;
 
-    public TestRisTestSuite() throws MalformedURLException, ConfigurationException {
+    public TestRisTestSuite() throws MalformedURLException {
         merchantId = Long.parseLong(TestConfiguration.getMerchantID());
         URL serverUrl = new URL(TestConfiguration.getRisURL());
         client = new KountRisClient(serverUrl, TestConfiguration.getRisAPIKey());
     }
 
     @Test
-    public void testRisQOneItemRequiredFieldsOneRuleReview_1() throws RisException {
-        if (isNotPointingToCommand()) {
-            return;
-        }
+    public void testRisQOneItemRequiredFieldsOneRuleReview_1() throws RisException, UnsupportedEncodingException {
         this.sessionId = Utilities.generateUniqueId();
         this.inq = Utilities.defaultInquiry(sessionId, merchantId);
         logger.debug("running testRisQOneItemRequiredFieldsOneRuleReview_1");
@@ -69,10 +49,7 @@ public class TestRisTestSuite {
     }
 
     @Test
-    public void testRisQMultiCartItemsTwoOptionalFieldsTwoRulesDecline_2() throws RisException {
-        if (isNotPointingToCommand()) {
-            return;
-        }
+    public void testRisQMultiCartItemsTwoOptionalFieldsTwoRulesDecline_2() throws RisException, UnsupportedEncodingException {
         this.sessionId = Utilities.generateUniqueId();
         this.inq = Utilities.defaultInquiry(sessionId, merchantId);
         logger.debug("running testRisQMultiCartItemsTwoOptionalFieldsTwoRulesDecline_2");
@@ -94,10 +71,7 @@ public class TestRisTestSuite {
     }
 
     @Test
-    public void testRisQWithUserDefinedFields_3() throws RisException {
-        if (isNotPointingToCommand()) {
-            return;
-        }
+    public void testRisQWithUserDefinedFields_3() throws RisException, UnsupportedEncodingException {
         this.sessionId = Utilities.generateUniqueId();
         this.inq = Utilities.defaultInquiry(sessionId, merchantId);
         logger.debug("running testRisQWitUserDefinedFields_3");
@@ -125,10 +99,7 @@ public class TestRisTestSuite {
     }
 
     @Test
-    public void testRisQHardErrorExpected_4() throws RisException {
-        if (isNotPointingToCommand()) {
-            return;
-        }
+    public void testRisQHardErrorExpected_4() throws RisException, UnsupportedEncodingException {
         this.sessionId = Utilities.generateUniqueId();
         this.inq = Utilities.defaultInquiry(sessionId, merchantId);
         logger.debug("running testRisQHardErrorExpected_4");
@@ -146,10 +117,7 @@ public class TestRisTestSuite {
     }
 
     @Test
-    public void testRisQWarningApproved_5() throws RisException {
-        if (isNotPointingToCommand()) {
-            return;
-        }
+    public void testRisQWarningApproved_5() throws RisException, UnsupportedEncodingException {
         this.sessionId = Utilities.generateUniqueId();
         this.inq = Utilities.defaultInquiry(sessionId, merchantId);
         logger.debug("running testRisQWarningApproved_5");
@@ -180,10 +148,7 @@ public class TestRisTestSuite {
     }
 
     @Test
-    public void testRisQHardSoftErrorsExpected_6() throws RisException {
-        if (isNotPointingToCommand()) {
-            return;
-        }
+    public void testRisQHardSoftErrorsExpected_6() throws RisException, UnsupportedEncodingException {
         this.sessionId = Utilities.generateUniqueId();
         this.inq = Utilities.defaultInquiry(sessionId, merchantId);
         logger.debug("running testRisQHardSoftErrorsExpected_6");
@@ -218,10 +183,7 @@ public class TestRisTestSuite {
     }
 
     @Test
-    public void testRisWTwoKCRulesReview_7() throws RisException {
-        if (isNotPointingToCommand()) {
-            return;
-        }
+    public void testRisWTwoKCRulesReview_7() throws RisException, UnsupportedEncodingException {
         this.sessionId = Utilities.generateUniqueId();
         this.inq = Utilities.defaultInquiry(sessionId, merchantId);
         logger.debug("running testRisWTwoKCRulesReview_7");
@@ -233,7 +195,9 @@ public class TestRisTestSuite {
         Response response = client.process(inq);
         logger.trace(response.toString());
 
-        MatcherAssert.assertThat(response.getKcDecision(), CombinableMatcher.either(StringContains.containsString("R")).or(StringContains.containsString("D")));
+        boolean validDecision = response.getKcDecision().contains("R") || response.getKcDecision().contains("D");
+
+        assertTrue(validDecision);
         assertEquals(0, response.getWarningCount());
         assertEquals(0, response.getKcWarningCount());
         assertEquals(2, response.getKcEventCount());
@@ -255,30 +219,8 @@ public class TestRisTestSuite {
         assertTrue(billingToShipping && orderTotal);
     }
 
-//	@Test
-//	public void testRisJOneKountCentralRuleDecline_8() throws RisException {
-//		logger.debug("running testRisJOneKountCentralRuelDecline_8");
-//		inq.setMode(InquiryMode.KC_QUICK_INQUIRY_J);
-//		inq.setTotal(1000);
-//		inq.setKcCustomerId("KCentralCustomerDeclineMe");
-//
-//		Response response = client.process(inq);
-//		logger.trace(response.toString());
-//
-//		MatcherAssert.assertThat(response.getKcDecision(),either(StringContains.containsString("R")).or(StringContains.containsString("D")));
-//		assertEquals("D", response.getKcDecision());
-//		assertEquals(0, response.getKcWarningCount());
-//		assertEquals(1, response.getKcEventCount());
-//
-//		assertEquals("D", response.getKcEvents().get(0).getDecision());
-//		assertEquals("orderTotalDecline", response.getKcEvents().get(0).getCode());
-//	}
-
     @Test
-    public void testModeUAfterModeQ_9() throws RisException, NoSuchAlgorithmException {
-        if (isNotPointingToCommand()) {
-            return;
-        }
+    public void testModeUAfterModeQ_9() throws RisException, NoSuchAlgorithmException, UnsupportedEncodingException {
         this.sessionId = Utilities.generateUniqueId();
         this.inq = Utilities.defaultInquiry(sessionId, merchantId);
         logger.debug("running testModeUAfterModeQ_9");
@@ -319,10 +261,7 @@ public class TestRisTestSuite {
     }
 
     @Test
-    public void testModeXAfterModeQ_10() throws RisException, NoSuchAlgorithmException {
-        if (isNotPointingToCommand()) {
-            return;
-        }
+    public void testModeXAfterModeQ_10() throws RisException, NoSuchAlgorithmException, UnsupportedEncodingException {
         this.sessionId = Utilities.generateUniqueId();
         this.inq = Utilities.defaultInquiry(sessionId, merchantId);
         logger.debug("running testModeXAfterModeQ_10");
@@ -364,10 +303,7 @@ public class TestRisTestSuite {
     }
 
     @Test
-    public void testModeP_11() throws RisException {
-        if (isNotPointingToCommand()) {
-            return;
-        }
+    public void testModeP_11() throws RisException, UnsupportedEncodingException {
         this.sessionId = Utilities.generateUniqueId();
         this.inq = Utilities.defaultInquiry(sessionId, merchantId);
         logger.debug("running testModeP_11");
@@ -381,10 +317,5 @@ public class TestRisTestSuite {
 
         assertEquals("P", response.getMode());
         assertEquals("A", response.getAuto());
-    }
-
-    private static boolean isNotPointingToCommand() {
-        String migrationMode = System.getProperty("migration.mode.enabled");
-        return Boolean.parseBoolean(migrationMode);
     }
 }

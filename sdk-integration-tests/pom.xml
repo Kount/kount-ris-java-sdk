@@ -1,43 +1,38 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>com.kount</groupId>
-    <artifactId>kount-java-parent</artifactId>
-    <version>8.0.0</version>
-  </parent>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
-  <artifactId>sdk-integration-tests</artifactId>
-  <name>sdk-integration-tests</name>
+    <parent>
+        <groupId>com.kount</groupId>
+        <artifactId>kount-java-parent</artifactId>
+        <version>9.0.0</version>
+    </parent>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+    <artifactId>sdk-integration-tests</artifactId>
+    <name>sdk-integration-tests</name>
 
-  <dependencies>
-    <dependency>
-      <groupId>com.kount</groupId>
-      <artifactId>kount-ris-sdk</artifactId>
-      <version>${project.version}</version>
-    </dependency>
+    <dependencies>
+        <dependency>
+            <groupId>com.kount</groupId>
+            <artifactId>kount-ris-sdk</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <scope>test</scope>
-    </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
-    <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest</artifactId>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
-
-  <build>
-    <plugins>
-    </plugins>
-  </build>
+    <build>
+        <plugins>
+        </plugins>
+    </build>
 
 </project>

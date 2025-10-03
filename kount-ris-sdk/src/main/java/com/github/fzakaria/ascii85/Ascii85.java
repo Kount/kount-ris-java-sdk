@@ -1,5 +1,7 @@
 package com.github.fzakaria.ascii85;
 
+
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -37,8 +39,7 @@ public class Ascii85 {
         //We break the payload into int (4 bytes)
         byte[] chunk = new byte[4];
         int chunkIndex = 0;
-        for(int i = 0 ; i < payload.length; i++) {
-            byte currByte = payload[i];
+        for (byte currByte : payload) {
             chunk[chunkIndex++] = currByte;
 
             if (chunkIndex == 4) {
@@ -88,21 +89,20 @@ public class Ascii85 {
      * @return The binary data decoded from the input
      */
     public static byte[] decode(String chars) {
-        if (chars == null || chars.length() == 0) {
+        if (chars == null || chars.isEmpty()) {
             throw new IllegalArgumentException("You must provide a non-zero length input");
         }
         //By using five ASCII characters to represent four bytes of binary data the encoded size ¹⁄₄ is larger than the original
         BigDecimal decodedLength = BigDecimal.valueOf(chars.length()).multiply(BigDecimal.valueOf(4))
                 .divide(BigDecimal.valueOf(5));
-        ByteBuffer bytebuff = ByteBuffer.allocate(decodedLength.intValue());
+        ByteBuffer byteBuff = ByteBuffer.allocate(decodedLength.intValue());
         //1. Whitespace characters may occur anywhere to accommodate line length limitations. So lets strip it.
         chars = REMOVE_WHITESPACE.matcher(chars).replaceAll("");
         //Since Base85 is an ascii encoder, we don't need to get the bytes as UTF-8.
         byte[] payload = chars.getBytes(StandardCharsets.US_ASCII);
         byte[] chunk = new byte[5];
         int chunkIndex = 0;
-        for(int i = 0 ; i < payload.length; i++) {
-            byte currByte = payload[i];
+        for (byte currByte : payload) {
             //Because all-zero data is quite common, an exception is made for the sake of data compression,
             //and an all-zero group is encoded as a single character "z" instead of "!!!!!".
             if (currByte == 'z') {
@@ -119,7 +119,7 @@ public class Ascii85 {
             }
 
             if (chunkIndex == 5) {
-                bytebuff.put(decodeChunk(chunk));
+                byteBuff.put(decodeChunk(chunk));
                 Arrays.fill(chunk, (byte) 0);
                 chunkIndex = 0;
             }
@@ -131,12 +131,12 @@ public class Ascii85 {
             Arrays.fill(chunk, chunkIndex, chunk.length, (byte)'u');
             byte[] paddedDecode = decodeChunk(chunk);
             for(int i = 0 ; i < paddedDecode.length - numPadded; i++) {
-                bytebuff.put(paddedDecode[i]);
+                byteBuff.put(paddedDecode[i]);
             }
         }
 
-        bytebuff.flip();
-        return Arrays.copyOf(bytebuff.array(),bytebuff.limit());
+        byteBuff.flip();
+        return Arrays.copyOf(byteBuff.array(),byteBuff.limit());
     }
 
     private static byte[] decodeChunk(byte[] chunk) {
@@ -170,12 +170,12 @@ public class Ascii85 {
     }
 
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws UnsupportedEncodingException {
 		String phrase = "4077th hawkeye trapper radar section-8";
-		String encoded = Ascii85.encode(phrase.getBytes(StandardCharsets.UTF_8));
+		String encoded = Ascii85.encode(phrase.getBytes("UTF-8"));
 		System.out.println(encoded);
 		
-		System.out.println(new String(Ascii85.decode(encoded), StandardCharsets.UTF_8));
+		System.out.println(new String(Ascii85.decode(encoded), "UTF-8"));
 	}
 
 }

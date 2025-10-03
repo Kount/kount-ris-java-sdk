@@ -5,7 +5,7 @@ package com.kount.ris.util;
  * 
  * @author Kount &lt;custserv@kount.com&gt;
  * @version $Id$
- * @copyright 2010 Keynetics Inc
+ * @copyright 2025 Equifax
  */
 public class CartItem {
 	
@@ -97,15 +97,13 @@ public class CartItem {
 	 * @return String representation of this shopping cart item.
 	 */
 	public String toString() {
-		StringBuffer str = new StringBuffer();
-		str.append("Product Type: ").append(this.productType).append("\n");
-		str.append("Item Name: ").append(this.itemName).append("\n");
-		str.append("Description: ").append(this.description).append("\n");
-		str.append("Quantity: ").append(this.quantity).append("\n");
-		str.append("Price: ").append(this.price).append("\n");
-		str.append("\n");
 
-		return str.toString();
+        return "Product Type: " + this.productType + "\n" +
+                "Item Name: " + this.itemName + "\n" +
+                "Description: " + this.description + "\n" +
+                "Quantity: " + this.quantity + "\n" +
+                "Price: " + this.price + "\n" +
+                "\n";
 	}
 
 }
