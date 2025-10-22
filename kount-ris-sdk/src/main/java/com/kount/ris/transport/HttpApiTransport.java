@@ -25,6 +25,7 @@ import org.apache.logging.log4j.Logger;
 import javax.naming.ConfigurationException;
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -63,6 +64,7 @@ public class HttpApiTransport extends Transport {
     protected static final Lock bearerReadLock = bearerRWLock.readLock();
     protected static final Lock bearerWriteLock = bearerRWLock.writeLock();
     public static final String PF_AUTH_HEADER = "Authorization";
+    private boolean forceUtf8 = false;
 
     /**
      * Logger.
@@ -128,8 +130,9 @@ public class HttpApiTransport extends Transport {
      * @param url RIS server url.
      * @param key API key.
      */
-    public HttpApiTransport(URL url, String key, boolean migrationModeEnabled, String paymentsFraudApiKey, String paymentsFraudClientId, String paymentsFraudApiEndpoint, String paymentsFraudAuthEndpoint) throws ConfigurationException {
+    public HttpApiTransport(URL url, String key, boolean migrationModeEnabled, String paymentsFraudApiKey, String paymentsFraudClientId, String paymentsFraudApiEndpoint, String paymentsFraudAuthEndpoint, boolean forceUtf8) throws ConfigurationException {
         this(url, key);
+        this.forceUtf8 = forceUtf8;
         configureMigrationMode(migrationModeEnabled, paymentsFraudApiKey, paymentsFraudClientId, paymentsFraudApiEndpoint, paymentsFraudAuthEndpoint);
 
     }
@@ -161,8 +164,9 @@ public class HttpApiTransport extends Transport {
      * @param maxConnections         connection Pool Threads.
      * @param maxConnectionsPerRoute connection Per Route.
      */
-    public HttpApiTransport(URL url, String key, int maxConnections, int maxConnectionsPerRoute, boolean migrationModeEnabled, String paymentsFraudApiKey, String paymentsFraudClientId, String paymentsFraudApiEndpoint, String paymentsFraudAuthEndpoint) throws ConfigurationException {
+    public HttpApiTransport(URL url, String key, int maxConnections, int maxConnectionsPerRoute, boolean migrationModeEnabled, String paymentsFraudApiKey, String paymentsFraudClientId, String paymentsFraudApiEndpoint, String paymentsFraudAuthEndpoint, boolean forceUtf8) throws ConfigurationException {
         this(url, key, maxConnections, maxConnectionsPerRoute);
+        this.forceUtf8 = forceUtf8;
         configureMigrationMode(migrationModeEnabled, paymentsFraudApiKey, paymentsFraudClientId, paymentsFraudApiEndpoint, paymentsFraudAuthEndpoint);
     }
 
@@ -248,7 +252,11 @@ public class HttpApiTransport extends Transport {
 
             httpPost.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
-            httpPost.setEntity(new UrlEncodedFormEntity(convertToNameValuePair(params)));
+            if (forceUtf8) {
+                httpPost.setEntity(new UrlEncodedFormEntity(convertToNameValuePair(params), StandardCharsets.UTF_8));
+            } else {
+                httpPost.setEntity(new UrlEncodedFormEntity(convertToNameValuePair(params)));
+            }
 
             try (CloseableHttpResponse httpResponse = getHttpClient().execute(httpPost);
                  Reader reader = new InputStreamReader(readAllInput(httpResponse.getEntity()))

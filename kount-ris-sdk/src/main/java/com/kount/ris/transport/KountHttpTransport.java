@@ -12,6 +12,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.Map;
@@ -237,7 +238,7 @@ public class KountHttpTransport extends Transport {
 
             Response responseObj;
 
-			try (OutputStreamWriter out = new OutputStreamWriter(urlConn.getOutputStream(), "UTF-8")) {
+			try (OutputStreamWriter out = new OutputStreamWriter(urlConn.getOutputStream(), StandardCharsets.UTF_8)) {
                 writeParametersToOutput(out, params);
                 out.flush();
             }
