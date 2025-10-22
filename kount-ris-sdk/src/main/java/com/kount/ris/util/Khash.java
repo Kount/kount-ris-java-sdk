@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
@@ -49,14 +50,14 @@ public final class Khash {
 	 * The Khash class default constructor. Uses <code>System.getProperty</code> to initialize
 	 * the configuration key that is used for hashing operations.
 	 */
-	private Khash() throws RuntimeException, UnsupportedEncodingException {
+	private Khash() throws RuntimeException {
 		configurationKey = System.getProperty(RisConfigurationConstants.PROPERTY_RIS_CONFIG_KEY, null); 
 		if (configurationKey == null || configurationKey.isEmpty()) {
 			logger.error("No configuration key set at 'kount.config.key' system variable");
 			throw new RuntimeException("No configuration key set");
 		}
 		
-		configurationKey = new String(Ascii85.decode(configurationKey), "UTF-8");
+		configurationKey = new String(Ascii85.decode(configurationKey), StandardCharsets.UTF_8);
 		
 		try {
 			String crypted = readCryptedConfigurationKey();
@@ -72,9 +73,9 @@ public final class Khash {
 		}
     }
 	
-	public static String sha256(String plain) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+	public static String sha256(String plain) throws NoSuchAlgorithmException {
 		MessageDigest d = MessageDigest.getInstance("sha-256");
-		byte[] digest = d.digest(plain.getBytes("UTF-8"));
+		byte[] digest = d.digest(plain.getBytes(StandardCharsets.UTF_8));
 
 		StringBuffer hexString = new StringBuffer();
         for (byte b : digest) {

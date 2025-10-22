@@ -1,7 +1,6 @@
 package com.github.fzakaria.ascii85;
 
 
-import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -170,12 +169,12 @@ public class Ascii85 {
     }
 
 
-    public static void main(String[] args) throws UnsupportedEncodingException {
+    public static void main(String[] args) {
 		String phrase = "4077th hawkeye trapper radar section-8";
-		String encoded = Ascii85.encode(phrase.getBytes("UTF-8"));
+		String encoded = Ascii85.encode(phrase.getBytes(StandardCharsets.UTF_8));
 		System.out.println(encoded);
 		
-		System.out.println(new String(Ascii85.decode(encoded), "UTF-8"));
+		System.out.println(new String(Ascii85.decode(encoded), StandardCharsets.UTF_8));
 	}
 
 }

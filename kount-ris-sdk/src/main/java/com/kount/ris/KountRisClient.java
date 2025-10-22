@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -118,8 +119,29 @@ public class KountRisClient {
      */
 	public KountRisClient(URL url, File apiKeyFile, boolean migrationModeEnabled, String paymentsFraudApiKey, String paymentsFraudClientId, String paymentsFraudApiEndpoint, String paymentsFraudAuthEndpoint) throws RisTransportException, ConfigurationException {
 		getApiKey(apiKeyFile);
-		transport = new HttpApiTransport(url, apiKey, migrationModeEnabled, paymentsFraudApiKey, paymentsFraudClientId, paymentsFraudApiEndpoint, paymentsFraudAuthEndpoint);
+		transport = new HttpApiTransport(url, apiKey, migrationModeEnabled, paymentsFraudApiKey, paymentsFraudClientId, paymentsFraudApiEndpoint, paymentsFraudAuthEndpoint, false);
 	}
+
+    /**
+     * For use with Migration mode and Payments Fraud integration.
+     *
+     * @param url Ris server URL
+     * @param apiKeyFile API key file (absolute path)
+     * @param migrationModeEnabled true if migration mode is enabled, false otherwise
+     * @param paymentsFraudApiKey API key for Payments Fraud
+     * @param paymentsFraudClientId Client ID for Payments Fraud
+     * @param paymentsFraudApiEndpoint Payments Fraud API endpoint
+     * @param paymentsFraudAuthEndpoint Payments Fraud Auth endpoint
+     * @param forceUtf8 Force UTF-8 encoding this may cause encoding issues with legacy systems
+     * @throws RisTransportException RisTransportException
+     *          Exception if opening the api key file has a problem.
+     * @throws ConfigurationException ConfigurationException
+     *          Exception if migration configuration is invalid.
+     */
+    public KountRisClient(URL url, File apiKeyFile, boolean migrationModeEnabled, String paymentsFraudApiKey, String paymentsFraudClientId, String paymentsFraudApiEndpoint, String paymentsFraudAuthEndpoint, boolean forceUtf8) throws RisTransportException, ConfigurationException {
+        getApiKey(apiKeyFile);
+        transport = new HttpApiTransport(url, apiKey, migrationModeEnabled, paymentsFraudApiKey, paymentsFraudClientId, paymentsFraudApiEndpoint, paymentsFraudAuthEndpoint, forceUtf8);
+    }
 
     /**
      *For use with Migration mode and Payments Fraud integration.
@@ -140,8 +162,31 @@ public class KountRisClient {
      */
 	public KountRisClient(URL url, File apiKeyFile, int connectionPoolThreads , int connectionPerRoute, boolean migrationModeEnabled, String paymentsFraudApiKey, String paymentsFraudClientId, String paymentsFraudApiEndpoint, String paymentsFraudAuthEndpoint) throws RisTransportException, ConfigurationException {
 		getApiKey(apiKeyFile);
-		transport = new HttpApiTransport(url, apiKey, connectionPoolThreads, connectionPerRoute, migrationModeEnabled, paymentsFraudApiKey, paymentsFraudClientId, paymentsFraudApiEndpoint, paymentsFraudAuthEndpoint);
+		transport = new HttpApiTransport(url, apiKey, connectionPoolThreads, connectionPerRoute, migrationModeEnabled, paymentsFraudApiKey, paymentsFraudClientId, paymentsFraudApiEndpoint, paymentsFraudAuthEndpoint, false);
 	}
+
+    /**
+     *For use with Migration mode and Payments Fraud integration.
+     *
+     * @param url Ris server URL
+     * @param apiKeyFile API key file (absolute path)
+     * @param connectionPoolThreads Number of connection pool threads
+     * @param connectionPerRoute Number of connections per route
+     * @param migrationModeEnabled true if migration mode is enabled, false otherwise
+     * @param paymentsFraudApiKey API key for Payments Fraud
+     * @param paymentsFraudClientId Client ID for Payments Fraud
+     * @param paymentsFraudApiEndpoint Payments Fraud API endpoint
+     * @param paymentsFraudAuthEndpoint Payments Fraud Auth endpoint
+     * @param forceUtf8 Force UTF-8 encoding this may cause encoding issues with legacy systems
+     * @throws RisTransportException RisTransportException
+     *          Exception if opening the api key file has a problem.
+     * @throws ConfigurationException ConfigurationException
+     *          Exception if migration configuration is invalid.
+     */
+    public KountRisClient(URL url, File apiKeyFile, int connectionPoolThreads , int connectionPerRoute, boolean migrationModeEnabled, String paymentsFraudApiKey, String paymentsFraudClientId, String paymentsFraudApiEndpoint, String paymentsFraudAuthEndpoint, boolean forceUtf8) throws RisTransportException, ConfigurationException {
+        getApiKey(apiKeyFile);
+        transport = new HttpApiTransport(url, apiKey, connectionPoolThreads, connectionPerRoute, migrationModeEnabled, paymentsFraudApiKey, paymentsFraudClientId, paymentsFraudApiEndpoint, paymentsFraudAuthEndpoint, forceUtf8);
+    }
 
 	/**
 	 * Constructor for using API Key instead of Cert.
@@ -171,8 +216,27 @@ public class KountRisClient {
 	 */
 	public KountRisClient(URL url, String key, boolean migrationModeEnabled, String paymentsFraudApiKey, String paymentsFraudClientId, String paymentsFraudApiEndpoint, String paymentsFraudAuthEndpoint) throws ConfigurationException {
 		apiKey = key;
-		transport = new HttpApiTransport(url, apiKey, migrationModeEnabled, paymentsFraudApiKey, paymentsFraudClientId, paymentsFraudApiEndpoint, paymentsFraudAuthEndpoint);
+		transport = new HttpApiTransport(url, apiKey, migrationModeEnabled, paymentsFraudApiKey, paymentsFraudClientId, paymentsFraudApiEndpoint, paymentsFraudAuthEndpoint, false);
 	}
+
+    /**
+     *For use with Migration mode and Payments Fraud integration.
+     *
+     * @param url Ris server URL
+     * @param key API key
+     * @param migrationModeEnabled true if migration mode is enabled, false otherwise
+     * @param paymentsFraudApiKey API key for Payments Fraud
+     * @param paymentsFraudClientId Client ID for Payments Fraud
+     * @param paymentsFraudApiEndpoint Payments Fraud API endpoint
+     * @param paymentsFraudAuthEndpoint Payments Fraud Auth endpoint
+     * @param forceUtf8 Force UTF-8 encoding this may cause encoding issues with legacy systems
+     * @throws ConfigurationException ConfigurationException
+     *          Exception if migration configuration is invalid.
+     */
+    public KountRisClient(URL url, String key, boolean migrationModeEnabled, String paymentsFraudApiKey, String paymentsFraudClientId, String paymentsFraudApiEndpoint, String paymentsFraudAuthEndpoint, boolean forceUtf8) throws ConfigurationException {
+        apiKey = key;
+        transport = new HttpApiTransport(url, apiKey, migrationModeEnabled, paymentsFraudApiKey, paymentsFraudClientId, paymentsFraudApiEndpoint, paymentsFraudAuthEndpoint, forceUtf8);
+    }
 
 	/**
 	 * Constructor for using API Key instead of Cert.
@@ -208,7 +272,28 @@ public class KountRisClient {
      */
     public KountRisClient(URL url, String key, int connectionPoolThreads , int connectionPerRoute, boolean migrationModeEnabled, String paymentsFraudApiKey, String paymentsFraudClientId, String paymentsFraudApiEndpoint, String paymentsFraudAuthEndpoint) throws ConfigurationException {
         apiKey = key;
-        transport = new HttpApiTransport(url, apiKey, connectionPoolThreads, connectionPerRoute, migrationModeEnabled, paymentsFraudApiKey, paymentsFraudClientId, paymentsFraudApiEndpoint, paymentsFraudAuthEndpoint);
+        transport = new HttpApiTransport(url, apiKey, connectionPoolThreads, connectionPerRoute, migrationModeEnabled, paymentsFraudApiKey, paymentsFraudClientId, paymentsFraudApiEndpoint, paymentsFraudAuthEndpoint, false);
+    }
+
+    /**
+     * Constructor for using API Key instead of Cert.
+     *
+     * @param url Ris server URL.
+     * @param key PI key (key data as a string).
+     * @param connectionPoolThreads Number of connection pool threads
+     * @param connectionPerRoute Number of connections per route
+     * @param migrationModeEnabled true if migration mode is enabled, false otherwise
+     * @param paymentsFraudApiKey API key for Payments Fraud
+     * @param paymentsFraudClientId Client ID for Payments Fraud
+     * @param paymentsFraudApiEndpoint Payments Fraud API endpoint
+     * @param paymentsFraudAuthEndpoint Payments Fraud Auth endpoint
+     * @param forceUtf8 Force UTF-8 encoding this may cause encoding issues with legacy systems
+     * @throws ConfigurationException ConfigurationException
+     *          Exception if migration configuration is invalid.
+     */
+    public KountRisClient(URL url, String key, int connectionPoolThreads , int connectionPerRoute, boolean migrationModeEnabled, String paymentsFraudApiKey, String paymentsFraudClientId, String paymentsFraudApiEndpoint, String paymentsFraudAuthEndpoint, boolean forceUtf8) throws ConfigurationException {
+        apiKey = key;
+        transport = new HttpApiTransport(url, apiKey, connectionPoolThreads, connectionPerRoute, migrationModeEnabled, paymentsFraudApiKey, paymentsFraudClientId, paymentsFraudApiEndpoint, paymentsFraudAuthEndpoint, forceUtf8);
     }
 
 	/**
@@ -278,7 +363,7 @@ public class KountRisClient {
 		if (apiKey == null && apiKeyFile != null) {
 			try {
 				byte[] keyBytes = Files.readAllBytes(Paths.get(apiKeyFile.toURI()));
-				String key = new String(keyBytes, "UTF-8");
+				String key = new String(keyBytes, StandardCharsets.UTF_8);
                 apiKey = key.trim();
 			} catch (IOException e) {
                 logger.error("API Key file ({}) could not be found:\n{}", apiKeyFile, e);
