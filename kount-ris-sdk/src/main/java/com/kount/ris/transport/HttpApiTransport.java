@@ -171,6 +171,40 @@ public class HttpApiTransport extends Transport {
     }
 
     /**
+     * Getter
+     *
+     * @return bearer auth response
+     */
+    public BearerAuthResponse getBearerResponse() {
+        return bearer;
+    }
+
+    /**
+     * Getter
+     *
+     * @return is migration mode enabled
+     */
+    public boolean isMigrationModeEnabled() {
+        return migrationModeEnabled;
+    }
+
+    /**
+     * Using this function is strongly discouraged and will result in warning logs
+     *
+     * @param customBearer bearer to set
+     */
+    public void setCustomBearerResponse(BearerAuthResponse customBearer) {
+
+        logger.warn("Setting custom bearer response. This is not recommended.");
+        bearerWriteLock.lock();
+        bearerReadLock.lock();
+        this.bearer = customBearer;
+        bearerReadLock.unlock();
+        bearerWriteLock.unlock();
+
+    }
+
+    /**
      * Set API Key.
      *
      * @param key String Kount Api Key (public) to use for authentication with RIS

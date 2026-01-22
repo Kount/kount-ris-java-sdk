@@ -13,7 +13,7 @@ public class BearerAuthResponse {
     protected String tokenType = "";
 
     @JsonProperty("expires_in")
-    protected String expiresIn = "";
+    protected int expiresIn = 0;
 
     @JsonProperty("scope")
     protected String scope = "";
@@ -35,9 +35,9 @@ public class BearerAuthResponse {
     private int latencyBufferSeconds = 120;
 
     public OffsetDateTime getExpiresAt() {
-        if (!expiresAt.equals(OffsetDateTime.MIN) && !hasOffsetBeenAccountedFor) {
+        if (expiresIn != 0 && !hasOffsetBeenAccountedFor) {
             hasOffsetBeenAccountedFor = true;
-            expiresAt = createdAt.plusSeconds(Integer.parseInt(expiresIn) - latencyBufferSeconds); // allow for latency
+            expiresAt = createdAt.plusSeconds(expiresIn - latencyBufferSeconds); // allow for latency
         }
 
         return expiresAt;
@@ -56,11 +56,11 @@ public class BearerAuthResponse {
         this.scope = scope;
     }
 
-    public String getExpiresIn() {
+    public int getExpiresIn() {
         return expiresIn;
     }
 
-    public void setExpiresIn(String expiresIn) {
+    public void setExpiresIn(int expiresIn) {
         this.expiresIn = expiresIn;
     }
 
@@ -82,16 +82,17 @@ public class BearerAuthResponse {
 
 
     public BearerAuthResponse() {
-
+        createdAt = OffsetDateTime.now();
     }
 
 
-    public BearerAuthResponse(String accessToken, String tokenType, String expiresIn, String scope)
+    public BearerAuthResponse(String accessToken, String tokenType, int expiresIn, String scope)
     {
         this.accessToken = accessToken;
         this.tokenType = tokenType;
         this.expiresIn = expiresIn;
         this.scope = scope;
-        this.expiresAt = OffsetDateTime.now().plusSeconds(Long.parseLong(expiresIn));
+        this.createdAt = OffsetDateTime.now();
+        this.expiresAt = OffsetDateTime.now().plusSeconds(expiresIn);
     }
 }

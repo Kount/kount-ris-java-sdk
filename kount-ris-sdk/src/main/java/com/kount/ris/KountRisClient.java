@@ -1,5 +1,6 @@
 package com.kount.ris;
 
+import com.kount.ris.transport.BearerAuthResponse;
 import com.kount.ris.transport.HttpApiTransport;
 import com.kount.ris.transport.KountHttpTransport;
 import com.kount.ris.transport.Transport;
@@ -371,4 +372,26 @@ public class KountRisClient {
 			}
 		}
 	}
+
+    /**
+     * Using this function is strongly discouraged. Using it will generate warning messages
+     * @param customBearerResponse Set custom bearer response from Okta
+     */
+    public void setCustomBearerResponse(BearerAuthResponse customBearerResponse) {
+        if (this.transport instanceof HttpApiTransport) {
+            if (customBearerResponse != null && ((HttpApiTransport) this.transport).isMigrationModeEnabled()) {
+                ((HttpApiTransport) this.transport).setCustomBearerResponse(customBearerResponse);
+            } else {
+                logger.warn("Custom bearer response was not set because it is null or migration mode is not enabled.");
+            }
+        }
+    }
+
+    public BearerAuthResponse getCustomBearerResponse() {
+        if (this.transport instanceof HttpApiTransport) {
+            return ((HttpApiTransport) this.transport).getBearerResponse();
+        }
+
+        return null;
+    }
 }
