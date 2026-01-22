@@ -3,7 +3,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-    <version>9.0.1</version>
+    <version>9.0.2</version>
     <packaging>jar</packaging>
     <name>Kount Java SDK</name>
     <description>A wrapper to facilitate making Kount RIS calls</description>
@@ -13,7 +13,7 @@
 	<parent>
 		<groupId>com.kount</groupId>
 		<artifactId>kount-java-parent</artifactId>
-		<version>9.0.1</version>
+		<version>9.0.2</version>
 	</parent>
 
 	<dependencies>
