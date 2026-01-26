@@ -268,9 +268,13 @@ public class HttpApiTransport extends Transport {
                     bearerReadLock.unlock();
                 }
 
-                String clientId = this.paymentsFraudClientId;
-                params.put("MERC", clientId); // override merc with client id
-                httpPost.addHeader(CUSTOM_HEADER_MERCHANT_ID, clientId);
+                if (params.get("MERC") == null) {
+                    String clientId = this.paymentsFraudClientId;
+                    params.put("MERC", clientId); // override merc with client id
+                    httpPost.addHeader(CUSTOM_HEADER_MERCHANT_ID, clientId);
+                } else {
+                    httpPost.addHeader(CUSTOM_HEADER_MERCHANT_ID, params.get("MERC"));
+                }
             } else {
                 httpPost = new HttpPost(this.risServerUrl);
 
