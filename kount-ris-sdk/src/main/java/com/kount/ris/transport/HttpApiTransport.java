@@ -194,14 +194,8 @@ public class HttpApiTransport extends Transport {
      * @param customBearer bearer to set
      */
     public void setCustomBearerResponse(BearerAuthResponse customBearer) {
-
         logger.warn("Setting custom bearer response. This is not recommended.");
-        bearerWriteLock.lock();
-        bearerReadLock.lock();
         this.bearer = customBearer;
-        bearerReadLock.unlock();
-        bearerWriteLock.unlock();
-
     }
 
     /**
