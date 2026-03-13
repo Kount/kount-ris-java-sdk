@@ -336,6 +336,7 @@ public class HttpApiTransport extends Transport {
 
         if (bearer.getExpiresAt().isAfter(OffsetDateTime.now().plusSeconds(60))) {
             // previous thread updated it already
+            bearerWriteLock.unlock();
             return;
         }
 
